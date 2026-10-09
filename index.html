@@ -90,6 +90,7 @@
       <button class="nav-link active" data-target="home">Overview</button>
       <button class="nav-link" data-target="about">About</button>
       <button class="nav-link" data-target="skills">Skills</button>
+      <button class="nav-link" data-target="astropulse">Astropulse SMM</button>
       <button class="nav-link" data-target="nexora">Nexora AI</button>
       <button class="nav-link" data-target="cropindia">CropIndia AI</button>
       <button class="nav-link" data-target="education">Education</button>
@@ -148,10 +149,11 @@
       <button id="mobile-menu-close" class="close-icon-btn" aria-label="Close menu">&times;</button>
     </div>
     <div class="mobile-menu-links">
-      <button class="mobile-nav-link" data-target="home">🌐 World Overview</button>
+      <button class="mobile-nav-link" data-target="home">🌐 City Overview</button>
       <button class="mobile-nav-link" data-target="about">👤 About Me</button>
       <button class="mobile-nav-link" data-target="skills">⚡ Skills &amp; Stack</button>
-      <button class="mobile-nav-link" data-target="nexora">🚀 Nexora AI (Featured)</button>
+      <button class="mobile-nav-link" data-target="astropulse">📈 Astropulse SMM (HQ)</button>
+      <button class="mobile-nav-link" data-target="nexora">🚀 Nexora AI</button>
       <button class="mobile-nav-link" data-target="cropindia">🌾 CropIndia AI</button>
       <button class="mobile-nav-link" data-target="education">🎓 Education</button>
       <button class="mobile-nav-link" data-target="contact">📬 Get in Touch</button>
@@ -169,16 +171,19 @@
   <!-- Hero Glass Card (Displays on Home / Overview View) -->
   <section id="hero-card" class="hero-card" aria-label="Introduction">
     <div class="hero-tag">
-      <span class="tag-sparkle">✦</span> Interactive 3D Portfolio
+      <span class="tag-sparkle">✦</span> Interactive 3D City Portfolio
     </div>
     <h2 class="hero-title">Hi, I'm <span class="highlight-text">Murari Kumar</span></h2>
-    <p class="hero-role">Diploma CSE Student &amp; Developer</p>
+    <p class="hero-role">Diploma CSE Student, Developer &amp; AI Product Builder</p>
     <p class="hero-desc">
-      I build digital experiences and AI-powered products. Drag to explore my miniature low-poly world or click any glowing beacon.
+      Explore my interactive 3D miniature city! Visit the bustling <strong>Astropulse SMM</strong> headquarters with animated employees, check out <strong>Nexora AI</strong>, inspect the terraced farm, or click any glowing beacon.
     </p>
     <div class="hero-actions">
       <button class="btn btn-primary" data-action="explore">
-        <span>Explore World</span> &darr;
+        <span>Explore City</span> &darr;
+      </button>
+      <button class="btn btn-secondary" data-action="open-project" data-target="astropulse">
+        <span>Astropulse SMM</span> &rarr;
       </button>
       <button class="btn btn-secondary" data-action="open-project" data-target="nexora">
         <span>Nexora AI</span> &rarr;
@@ -331,6 +336,52 @@
           <span class="skill-pill"><strong>Git &amp; GitHub</strong><span>Version Control</span></span>
           <span class="skill-pill"><strong>Vercel &amp; Hosting</strong><span>Static &amp; Cloud Deployment</span></span>
           <span class="skill-pill"><strong>GSAP</strong><span>Web Animations</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: ASTROPULSE SMM (PROJECT) -->
+    <div id="template-astropulse">
+      <div class="project-hero-badge badge-cyan">
+        <span class="pulse-indicator pulse-cyan"></span> Social Media Marketing &amp; Provider Platform
+      </div>
+      
+      <h3 class="project-name">Astropulse SMM &mdash; Social Media Services &amp; API Provider</h3>
+      <p class="lead-text">
+        Astropulse SMM is an automated social media marketing (SMM) platform and services provider designed to help creators, digital agencies, and businesses accelerate their online growth, manage multi-platform campaigns, and automate high-volume social media orders through instant API processing.
+      </p>
+
+      <div class="project-links-row">
+        <a href="https://astropulsesmm.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Visit Live Platform (astropulsesmm.vercel.app)
+        </a>
+        <a href="https://github.com/YOUR_GITHUB_USERNAME/astropulse-smm" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" title="Replace with your GitHub repository link">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          Source Code (Configurable)
+        </a>
+      </div>
+
+      <div class="content-block">
+        <h4>Key Capabilities</h4>
+        <ul class="feature-bullets">
+          <li><strong>Automated Service Fulfillment:</strong> High-speed API-driven order routing and processing across Instagram, YouTube, Telegram, and more.</li>
+          <li><strong>Real-Time Campaign &amp; Order Dashboard:</strong> Instant tracking of order progress, delivery speeds, transaction histories, and balance management.</li>
+          <li><strong>Reseller REST API Integration:</strong> Scalable endpoints enabling external platforms and bots to place and monitor orders automatically.</li>
+          <li><strong>Security &amp; Account Protection:</strong> Secure session handling, wallet deposits, and automated server monitoring.</li>
+          <li><strong>3D City HQ Highlight:</strong> Check out the bustling 3D Astropulse SMM corporate campus in this portfolio with an automated security barrier gate and active team members handling data, design, and courier dispatch!</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h4>Confirmed Technology Stack</h4>
+        <div class="tech-tags-list">
+          <span class="tech-tag">React</span>
+          <span class="tech-tag">JavaScript / ES6+</span>
+          <span class="tech-tag">RESTful APIs</span>
+          <span class="tech-tag">Database Management (DBMS)</span>
+          <span class="tech-tag">Vercel Deployment</span>
+          <span class="tech-tag">SMM Automation</span>
         </div>
       </div>
     </div>

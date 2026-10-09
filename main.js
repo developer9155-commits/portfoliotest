@@ -1,8 +1,15 @@
 /**
- * Murari Kumar - 3D Developer Portfolio
+ * Murari Kumar - 3D Developer Portfolio & Miniature City
  * ============================================================================
- * Cinematic Low-Poly Miniature World with Three.js, GSAP & Web Audio API
- * Built as a static, browser-ready web application for GitHub Pages.
+ * Cinematic Low-Poly 3D City with Three.js, GSAP & Web Audio API
+ * Features:
+ * - Astropulse SMM Corporate HQ with automated gate & 8 animated employees
+ * - Residential district with walking commuters who leave & enter houses
+ * - Cycling commuter who hits a bump and tumbles/falls down, then gets back up!
+ * - Dedicated farmer farming with a hoe at the CropIndia AI terraced fields
+ * - Welcome Guide/Narrator gesturing with both hands at the About Plaza
+ * - Nexora AI futuristic energy crystal laboratory
+ * - Mountain windmill, campfire, coral camper van, drifting clouds & fireflies
  * ============================================================================
  */
 
@@ -10,45 +17,50 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ==========================================================================
-   1. CONFIGURATION & CONSTANTS
+   1. CONFIGURATION & CAMERA PRESETS
    ========================================================================== */
 
 const CONFIG = {
-  // Camera view presets for cinematic transitions
+  // Camera view presets for cinematic GSAP transitions
   views: {
     home: {
-      position: new THREE.Vector3(22, 15, 24),
+      position: new THREE.Vector3(34, 22, 36),
       target: new THREE.Vector3(0, 2, 0),
-      duration: 2.0
+      duration: 2.2
     },
     about: {
-      position: new THREE.Vector3(-14, 7, 12),
-      target: new THREE.Vector3(-6, 2.5, 4),
+      position: new THREE.Vector3(-18, 9, 16),
+      target: new THREE.Vector3(-8, 3, 7),
       duration: 1.8
     },
     skills: {
-      position: new THREE.Vector3(12, 11, -3),
-      target: new THREE.Vector3(3, 6.5, -4),
+      position: new THREE.Vector3(16, 14, -4),
+      target: new THREE.Vector3(5, 7.5, -6),
+      duration: 1.8
+    },
+    astropulse: {
+      position: new THREE.Vector3(20, 10, -12),
+      target: new THREE.Vector3(10, 4, -8),
       duration: 1.8
     },
     nexora: {
-      position: new THREE.Vector3(14, 7, 10),
-      target: new THREE.Vector3(7, 3, 3),
+      position: new THREE.Vector3(18, 8, 14),
+      target: new THREE.Vector3(9, 3.2, 5),
       duration: 1.8
     },
     cropindia: {
-      position: new THREE.Vector3(-12, 7, -12),
-      target: new THREE.Vector3(-4, 2.5, -5),
+      position: new THREE.Vector3(-16, 9, -15),
+      target: new THREE.Vector3(-7, 3, -7),
       duration: 1.8
     },
     education: {
-      position: new THREE.Vector3(0, 10, 16),
-      target: new THREE.Vector3(0, 3, 2),
+      position: new THREE.Vector3(0, 14, 22),
+      target: new THREE.Vector3(0, 3, 4),
       duration: 1.8
     },
     contact: {
-      position: new THREE.Vector3(-3, 5, 15),
-      target: new THREE.Vector3(-2, 1.8, 8),
+      position: new THREE.Vector3(-6, 7, 20),
+      target: new THREE.Vector3(-3, 2, 11),
       duration: 1.8
     }
   },
@@ -60,7 +72,7 @@ const CONFIG = {
       name: 'About Murari',
       subtitle: 'CSE Diploma Student',
       icon: '👤',
-      position: new THREE.Vector3(-6, 3.2, 4),
+      position: new THREE.Vector3(-8, 3.6, 7),
       color: 0x9333ea
     },
     {
@@ -68,15 +80,23 @@ const CONFIG = {
       name: 'Skills & Stack',
       subtitle: 'Languages & Tools',
       icon: '⚡',
-      position: new THREE.Vector3(3, 7.5, -4),
+      position: new THREE.Vector3(5, 8.5, -6),
       color: 0x3b82f6
+    },
+    {
+      id: 'astropulse',
+      name: 'Astropulse SMM',
+      subtitle: 'Social Media Services HQ',
+      icon: '📈',
+      position: new THREE.Vector3(10, 5.2, -8),
+      color: 0x06b6d4
     },
     {
       id: 'nexora',
       name: 'Nexora AI',
-      subtitle: 'Featured AI Builder',
+      subtitle: 'AI Website Builder',
       icon: '🚀',
-      position: new THREE.Vector3(7, 3.8, 3),
+      position: new THREE.Vector3(9, 4.2, 5),
       color: 0x14b8a6
     },
     {
@@ -84,7 +104,7 @@ const CONFIG = {
       name: 'CropIndia AI',
       subtitle: 'Agri Intelligence',
       icon: '🌾',
-      position: new THREE.Vector3(-4, 3.2, -5),
+      position: new THREE.Vector3(-7, 3.8, -7),
       color: 0x10b981
     },
     {
@@ -92,7 +112,7 @@ const CONFIG = {
       name: 'Contact & Links',
       subtitle: 'Get In Touch',
       icon: '📬',
-      position: new THREE.Vector3(-2, 2.8, 8),
+      position: new THREE.Vector3(-3, 3.2, 11),
       color: 0xff6b6b
     }
   ],
@@ -111,13 +131,17 @@ const CONFIG = {
     snow: 0xf8fafc,
     camperCoral: 0xff6b6b,
     camperWhite: 0xf1f5f9,
-    road: 0x334155
+    road: 0x1e293b,
+    sidewalk: 0x94a3b8,
+    officeBlue: 0x1e3a8a,
+    officeGlass: 0x38bdf8,
+    officeNeon: 0x06b6d4
   }
 };
 
 /* ==========================================================================
    2. PROCEDURAL WEB AUDIO ENGINE
-   (Generates soothing ambient drone & sound effects without external files)
+   (Native Web Audio API ambient drone & UI sound effects)
    ========================================================================== */
 
 class AudioEngine {
@@ -136,10 +160,8 @@ class AudioEngine {
     if (!AudioContextClass) return;
 
     this.ctx = new AudioContextClass();
-
-    // Master volume limiter
     this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+    this.masterGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
     this.masterGain.connect(this.ctx.destination);
   }
 
@@ -155,7 +177,7 @@ class AudioEngine {
     this.isPlaying = true;
     this.isMuted = false;
 
-    // Ambient chords (F major 9 / Dreamy Ethereal Drone: F3, C4, E4, G4)
+    // Ambient chords (F major 9 / Dreamy Ethereal Drone)
     const frequencies = [174.61, 261.63, 329.63, 392.00];
 
     this.gainNode = this.ctx.createGain();
@@ -163,20 +185,16 @@ class AudioEngine {
     this.gainNode.gain.exponentialRampToValueAtTime(0.18, this.ctx.currentTime + 3);
     this.gainNode.connect(this.masterGain);
 
-    // Filter to give warm, analog lo-fi texture
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(520, this.ctx.currentTime);
+    filter.frequency.setValueAtTime(540, this.ctx.currentTime);
     filter.Q.setValueAtTime(2, this.ctx.currentTime);
     filter.connect(this.gainNode);
 
-    // Create detuned sine oscillators
     this.oscillators = frequencies.map((freq, i) => {
       const osc = this.ctx.createOscillator();
       osc.type = i % 2 === 0 ? 'sine' : 'triangle';
       osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-      // Subtle detune for shimmer
       osc.detune.setValueAtTime((i - 1.5) * 6, this.ctx.currentTime);
 
       const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
@@ -216,15 +234,14 @@ class AudioEngine {
     }
   }
 
-  // Soft UI click sound effect
   playClick() {
     if (!this.ctx || this.isMuted) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(640, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(320, this.ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(660, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(330, this.ctx.currentTime + 0.08);
 
       gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
@@ -236,7 +253,6 @@ class AudioEngine {
     } catch (e) {}
   }
 
-  // Smooth camera whoosh sound effect
   playWhoosh() {
     if (!this.ctx || this.isMuted) return;
     try {
@@ -281,7 +297,16 @@ class PortfolioApp {
       van: null,
       cyclist: null,
       campfireLight: null,
-      hotspotMeshes: []
+      hotspotMeshes: [],
+      // Astropulse SMM gate & employees
+      smmGate: null,
+      smmEmployees: [],
+      // Commuter who walks in & out of house
+      commuter: null,
+      // Farmer who is farming
+      farmer: null,
+      // Guide who gestures with both hands
+      guide: null
     };
 
     // DOM Elements
@@ -312,7 +337,7 @@ class PortfolioApp {
     };
 
     this.initThree();
-    this.initEnvironment();
+    this.initCityEnvironment();
     this.initHotspots();
     this.initUIEvents();
     this.simulateAssetLoading();
@@ -323,18 +348,13 @@ class PortfolioApp {
      Initialize Three.js Engine & Canvas
      ------------------------------------------------------------------------ */
   initThree() {
-    // Scene
     this.scene = new THREE.Scene();
+    this.scene.fog = new THREE.FogExp2(CONFIG.colors.fog, 0.012);
 
-    // Atmosphere Fog for depth
-    this.scene.fog = new THREE.FogExp2(CONFIG.colors.fog, 0.016);
-
-    // Camera
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
     this.camera.position.copy(CONFIG.views.home.position);
 
-    // Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
@@ -347,43 +367,34 @@ class PortfolioApp {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
 
-    // Controls
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.target.copy(CONFIG.views.home.target);
-    this.controls.minDistance = 8;
-    this.controls.maxDistance = 60;
-    this.controls.maxPolarAngle = Math.PI / 2 - 0.02; // Prevent going beneath island
-    this.controls.enablePan = false; // Keep focus on island center
+    this.controls.minDistance = 6;
+    this.controls.maxDistance = 85;
+    this.controls.maxPolarAngle = Math.PI / 2 - 0.02;
+    this.controls.enablePan = false;
 
-    // Subtle sky background
     this.createSkyBackground();
-
-    // Lighting
     this.setupLighting();
 
-    // Window resize handler
     window.addEventListener('resize', () => this.onWindowResize(), false);
 
-    // Raycasting for 3D clicks
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
     window.addEventListener('pointerdown', (e) => this.onPointerDown(e));
   }
 
-  /* ------------------------------------------------------------------------
-     Atmospheric Sky Gradient
-     ------------------------------------------------------------------------ */
   createSkyBackground() {
     const canvas = document.createElement('canvas');
     canvas.width = 32;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 128);
-    gradient.addColorStop(0, '#537ee8'); // Gentle sky cyan/blue
-    gradient.addColorStop(0.5, '#9fa8da'); // Soft lavender mid
-    gradient.addColorStop(1, '#e0e7ff'); // Pale horizon
+    gradient.addColorStop(0, '#4b7bec');
+    gradient.addColorStop(0.5, '#a5b4fc');
+    gradient.addColorStop(1, '#e0e7ff');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 32, 128);
 
@@ -391,72 +402,66 @@ class PortfolioApp {
     this.scene.background = texture;
   }
 
-  /* ------------------------------------------------------------------------
-     Lighting Setup
-     ------------------------------------------------------------------------ */
   setupLighting() {
-    // Hemisphere light: warm sky light + deep purple bounce from below
-    const hemiLight = new THREE.HemisphereLight(0xfff7ed, 0x3b0764, 0.9);
+    const hemiLight = new THREE.HemisphereLight(0xfff7ed, 0x3b0764, 0.95);
     this.scene.add(hemiLight);
 
-    // Directional Sunlight with soft low-poly shadows
-    const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.4);
-    dirLight.position.set(30, 45, 25);
+    const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.45);
+    dirLight.position.set(45, 55, 35);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 10;
-    dirLight.shadow.camera.far = 120;
-    dirLight.shadow.camera.left = -26;
-    dirLight.shadow.camera.right = 26;
-    dirLight.shadow.camera.top = 26;
-    dirLight.shadow.camera.bottom = -26;
+    dirLight.shadow.camera.far = 160;
+    dirLight.shadow.camera.left = -40;
+    dirLight.shadow.camera.right = 40;
+    dirLight.shadow.camera.top = 40;
+    dirLight.shadow.camera.bottom = -40;
     dirLight.shadow.bias = -0.0005;
     this.scene.add(dirLight);
 
-    // Ambient fill light for deep low-poly purple shadows
     const ambientLight = new THREE.AmbientLight(0x7c3aed, 0.45);
     this.scene.add(ambientLight);
   }
 
   /* ========================================================================
-     4. PROCEDURAL LOW-POLY MINIATURE WORLD GENERATION
+     4. PROCEDURAL MINIATURE CITY ISLAND GENERATION
      ======================================================================== */
 
-  initEnvironment() {
+  initCityEnvironment() {
     this.worldGroup = new THREE.Group();
     this.scene.add(this.worldGroup);
 
-    this.createFloatingIslandBase();
+    this.createCityIslandBase();
     this.createPurpleMountains();
-    this.createWindingRoad();
-    this.createCamperVan();
-    this.createPineTrees();
-    this.createVegetationAndRocks();
-    this.createCampfireAndCampsite();
+    this.createCityRoadsAndAvenues();
+    this.createAstropulseSMMIndustry();
+    this.createResidentialDistrict();
+    this.createCropTerracesAndFarmer();
+    this.createCamperVanAndCampsite();
+    this.createAboutPlazaAndGuide();
     this.createWindmill();
     this.createAiTechStation();
-    this.createCropTerraces();
+    this.createStreetFurnitureAndTrees();
+    this.createFallingCyclist();
+    this.createWalkingCommuter();
     this.createFloatingClouds();
     this.createFloatingParticles();
-    this.createCyclist();
   }
 
   /* ------------------------------------------------------------------------
-     A. Floating Island Base
+     A. Enlarged City Island Base
      ------------------------------------------------------------------------ */
-  createFloatingIslandBase() {
+  createCityIslandBase() {
     const islandGroup = new THREE.Group();
 
-    // Top grassy plateau (faceted cylinder for low-poly look)
-    const topGeo = new THREE.CylinderGeometry(15, 14, 2.5, 18, 2);
-    // Deform vertices slightly for organic feel
+    // Expanded plateau (radius 27 for a small city!)
+    const topGeo = new THREE.CylinderGeometry(27, 25.5, 3.2, 28, 2);
     const pos = topGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const y = pos.getY(i);
       if (y > 0) {
-        // Vary surface height subtly
-        pos.setY(i, y + (Math.sin(pos.getX(i) * 0.4) + Math.cos(pos.getZ(i) * 0.4)) * 0.4);
+        pos.setY(i, y + (Math.sin(pos.getX(i) * 0.25) + Math.cos(pos.getZ(i) * 0.25)) * 0.35);
       }
     }
     topGeo.computeVertexNormals();
@@ -467,18 +472,16 @@ class PortfolioApp {
       roughness: 0.85
     });
     const topMesh = new THREE.Mesh(topGeo, topMat);
-    topMesh.position.y = 1;
+    topMesh.position.y = 1.2;
     topMesh.receiveShadow = true;
     islandGroup.add(topMesh);
 
-    // Inverted rocky bedrock core tapering downward
-    const rockGeo = new THREE.ConeGeometry(14, 11, 16, 3);
+    // Bedrock cone tapering down
+    const rockGeo = new THREE.ConeGeometry(25, 18, 24, 3);
     const rPos = rockGeo.attributes.position;
     for (let i = 0; i < rPos.count; i++) {
-      const x = rPos.getX(i);
-      const z = rPos.getZ(i);
-      rPos.setX(i, x + (Math.random() - 0.5) * 1.5);
-      rPos.setZ(i, z + (Math.random() - 0.5) * 1.5);
+      rPos.setX(i, rPos.getX(i) + (Math.random() - 0.5) * 2.2);
+      rPos.setZ(i, rPos.getZ(i) + (Math.random() - 0.5) * 2.2);
     }
     rockGeo.computeVertexNormals();
 
@@ -489,7 +492,7 @@ class PortfolioApp {
     });
     const rockMesh = new THREE.Mesh(rockGeo, rockMat);
     rockMesh.rotation.x = Math.PI;
-    rockMesh.position.y = -5;
+    rockMesh.position.y = -8;
     rockMesh.receiveShadow = true;
     islandGroup.add(rockMesh);
 
@@ -497,30 +500,22 @@ class PortfolioApp {
   }
 
   /* ------------------------------------------------------------------------
-     B. Layered Purple & Indigo Mountains
+     B. Background Purple & Indigo Mountains
      ------------------------------------------------------------------------ */
   createPurpleMountains() {
     const mountainGroup = new THREE.Group();
 
     const mountainDefs = [
-      // x, y, z, radius, height, color, segments
-      { x: 3, y: 5.5, z: -6.5, r: 6.5, h: 10, c: CONFIG.colors.mountainBack, s: 7 },
-      { x: -3.5, y: 5, z: -7.5, r: 5.5, h: 8.5, c: CONFIG.colors.mountainMid, s: 6 },
-      { x: 7.5, y: 4, z: -5, r: 4.5, h: 7, c: CONFIG.colors.mountainFront, s: 6 },
-      { x: -7, y: 3.5, z: -4, r: 4, h: 6, c: 0x6d28d9, s: 5 },
-      { x: 1, y: 4.5, z: -4, r: 4, h: 6.5, c: 0x8b5cf6, s: 6 }
+      { x: 5, y: 8, z: -16, r: 9, h: 14, c: CONFIG.colors.mountainBack, s: 7 },
+      { x: -7, y: 7, z: -17, r: 8, h: 12, c: CONFIG.colors.mountainMid, s: 6 },
+      { x: 15, y: 6, z: -13, r: 7, h: 10, c: CONFIG.colors.mountainFront, s: 6 },
+      { x: -16, y: 5.5, z: -12, r: 7, h: 9.5, c: 0x6d28d9, s: 5 },
+      { x: 0, y: 6.5, z: -14, r: 6.5, h: 11, c: 0x8b5cf6, s: 6 }
     ];
 
     mountainDefs.forEach(def => {
       const geo = new THREE.ConeGeometry(def.r, def.h, def.s);
-      // Deform slightly
-      const p = geo.attributes.position;
-      for (let i = 0; i < p.count; i++) {
-        p.setX(i, p.getX(i) + (Math.random() - 0.5) * 0.8);
-        p.setZ(i, p.getZ(i) + (Math.random() - 0.5) * 0.8);
-      }
       geo.computeVertexNormals();
-
       const mat = new THREE.MeshStandardMaterial({
         color: def.c,
         flatShading: true,
@@ -532,8 +527,8 @@ class PortfolioApp {
       mesh.receiveShadow = true;
       mountainGroup.add(mesh);
 
-      // Low-poly Snow Cap on the highest peak
-      if (def.h >= 8) {
+      // Snow cap
+      if (def.h >= 11) {
         const snowGeo = new THREE.ConeGeometry(def.r * 0.38, def.h * 0.32, def.s);
         const snowMat = new THREE.MeshStandardMaterial({
           color: CONFIG.colors.snow,
@@ -550,437 +545,482 @@ class PortfolioApp {
   }
 
   /* ------------------------------------------------------------------------
-     C. Winding Road
+     C. City Road Network & Crosswalks
      ------------------------------------------------------------------------ */
-  createWindingRoad() {
-    const roadGroup = new THREE.Group();
+  createCityRoadsAndAvenues() {
+    const roadsGroup = new THREE.Group();
 
-    // Curved low-poly path coordinates across the island
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-10, 2.25, 7),
-      new THREE.Vector3(-4, 2.25, 6),
-      new THREE.Vector3(0, 2.25, 4),
-      new THREE.Vector3(4, 2.25, 2),
-      new THREE.Vector3(7, 2.25, 0),
-      new THREE.Vector3(5, 2.25, -3)
-    ]);
-
-    const roadGeo = new THREE.TubeGeometry(curve, 32, 1.1, 4, false);
-    const roadMat = new THREE.MeshStandardMaterial({
-      color: CONFIG.colors.road,
-      flatShading: true,
-      roughness: 0.9
-    });
-    const roadMesh = new THREE.Mesh(roadGeo, roadMat);
-    roadMesh.scale.set(1, 0.08, 1);
-    roadMesh.position.y = 0.05;
-    roadMesh.receiveShadow = true;
-    roadGroup.add(roadMesh);
-
-    // Save path for the cyclist animation
-    this.roadCurve = curve;
-    this.worldGroup.add(roadGroup);
-  }
-
-  /* ------------------------------------------------------------------------
-     D. Coral Camper Van
-     ------------------------------------------------------------------------ */
-  createCamperVan() {
-    const van = new THREE.Group();
-
-    // Main lower body (coral pink)
-    const bodyGeo = new THREE.BoxGeometry(2.8, 1.4, 1.7);
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: CONFIG.colors.camperCoral,
-      flatShading: true,
-      roughness: 0.6
-    });
-    const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-    bodyMesh.position.y = 1.0;
-    bodyMesh.castShadow = true;
-    van.add(bodyMesh);
-
-    // Upper cab & roof (crisp white)
-    const roofGeo = new THREE.BoxGeometry(2.6, 0.75, 1.6);
-    const roofMat = new THREE.MeshStandardMaterial({
-      color: CONFIG.colors.camperWhite,
-      flatShading: true,
-      roughness: 0.4
-    });
-    const roofMesh = new THREE.Mesh(roofGeo, roofMat);
-    roofMesh.position.set(0, 1.75, 0);
-    roofMesh.castShadow = true;
-    van.add(roofMesh);
-
-    // Windows (tinted dark glass)
-    const winMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      roughness: 0.2
-    });
-    // Front windshield
-    const frontWin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 1.4), winMat);
-    frontWin.position.set(1.31, 1.7, 0);
-    van.add(frontWin);
-
-    // Side windows
-    const sideWin1 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 1.62), winMat);
-    sideWin1.position.set(-0.2, 1.7, 0);
-    van.add(sideWin1);
-
-    // Roof rack & luggage
-    const rackGeo = new THREE.BoxGeometry(1.6, 0.1, 1.2);
-    const rackMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
-    const rack = new THREE.Mesh(rackGeo, rackMat);
-    rack.position.set(-0.3, 2.2, 0);
-    van.add(rack);
-
-    // Coral Surfboard on top
-    const boardGeo = new THREE.BoxGeometry(2.0, 0.1, 0.55);
-    const boardMat = new THREE.MeshStandardMaterial({
-      color: 0xf59e0b,
-      flatShading: true
-    });
-    const surfboard = new THREE.Mesh(boardGeo, boardMat);
-    surfboard.position.set(-0.3, 2.32, 0.2);
-    surfboard.rotation.y = 0.1;
-    van.add(surfboard);
-
-    // Wheels (4 rubber tires)
-    const wheelGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.28, 12);
-    const wheelMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      flatShading: true
-    });
-    const wheelPositions = [
-      [0.9, 0.38, 0.85],
-      [0.9, 0.38, -0.85],
-      [-0.9, 0.38, 0.85],
-      [-0.9, 0.38, -0.85]
-    ];
-
-    wheelPositions.forEach(pos => {
-      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-      wheel.rotation.x = Math.PI / 2;
-      wheel.position.set(...pos);
-      wheel.castShadow = true;
-      van.add(wheel);
-    });
-
-    // Headlights (warm glowing)
-    const lightGeo = new THREE.BoxGeometry(0.08, 0.22, 0.22);
-    const lightMat = new THREE.MeshStandardMaterial({
-      color: 0xfef08a,
-      emissive: 0xfef08a,
-      emissiveIntensity: 0.8
-    });
-    const hl1 = new THREE.Mesh(lightGeo, lightMat);
-    hl1.position.set(1.41, 0.9, 0.55);
-    const hl2 = new THREE.Mesh(lightGeo, lightMat);
-    hl2.position.set(1.41, 0.9, -0.55);
-    van.add(hl1, hl2);
-
-    // Position camper van at campsite overlook
-    van.position.set(-7.5, 2.25, 5.8);
-    van.rotation.y = Math.PI * 0.22;
-    van.scale.set(1.15, 1.15, 1.15);
-
-    this.worldGroup.add(van);
-    this.animatedObjects.van = van;
-  }
-
-  /* ------------------------------------------------------------------------
-     E. Stylized Low-Poly Pine Trees
-     ------------------------------------------------------------------------ */
-  createPineTrees() {
-    const treesGroup = new THREE.Group();
-
-    const trunkGeo = new THREE.CylinderGeometry(0.18, 0.24, 0.9, 5);
-    const trunkMat = new THREE.MeshStandardMaterial({
-      color: 0x78350f,
-      flatShading: true
-    });
-
-    // Layered foliage geometries
-    const f1Geo = new THREE.ConeGeometry(1.4, 1.6, 5);
-    const f2Geo = new THREE.ConeGeometry(1.1, 1.4, 5);
-    const f3Geo = new THREE.ConeGeometry(0.8, 1.1, 5);
-
-    const foliageColors = [0x15803d, 0x166534, 0x14532d, 0x047857];
-
-    const treeLocations = [
-      // Campsite cluster
-      { x: -9.5, z: 4.5, s: 1.1 },
-      { x: -8.8, z: 7.8, s: 1.3 },
-      { x: -5.5, z: 7.2, s: 0.9 },
-      { x: -11, z: 2, s: 1.2 },
-      // Mountain foothills
-      { x: -5, z: -2, s: 1.4 },
-      { x: -2, z: -1.5, s: 1.0 },
-      { x: 3, z: -1, s: 1.1 },
-      { x: 6, z: -2.5, s: 1.3 },
-      { x: 9, z: -1, s: 0.8 },
-      // Center grove
-      { x: -1.5, z: 1.5, s: 1.0 },
-      { x: 1, z: 6.5, s: 1.2 },
-      { x: 3.5, z: 5.5, s: 0.9 },
-      // East ridge
-      { x: 11, z: 1.5, s: 1.0 },
-      { x: 9.5, z: 6, s: 0.85 }
-    ];
-
-    treeLocations.forEach((loc, idx) => {
-      const tree = new THREE.Group();
-
-      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-      trunk.position.y = 0.45;
-      trunk.castShadow = true;
-      tree.add(trunk);
-
-      const color = foliageColors[idx % foliageColors.length];
-      const folMat = new THREE.MeshStandardMaterial({
-        color: color,
-        flatShading: true,
-        roughness: 0.8
-      });
-
-      const cone1 = new THREE.Mesh(f1Geo, folMat);
-      cone1.position.y = 1.3;
-      cone1.castShadow = true;
-      cone1.receiveShadow = true;
-
-      const cone2 = new THREE.Mesh(f2Geo, folMat);
-      cone2.position.y = 2.1;
-      cone2.castShadow = true;
-
-      const cone3 = new THREE.Mesh(f3Geo, folMat);
-      cone3.position.y = 2.8;
-      cone3.castShadow = true;
-
-      tree.add(cone1, cone2, cone3);
-
-      tree.position.set(loc.x, 2.3, loc.z);
-      tree.scale.set(loc.s, loc.s, loc.s);
-      tree.rotation.y = Math.random() * Math.PI * 2;
-      treesGroup.add(tree);
-    });
-
-    this.worldGroup.add(treesGroup);
-  }
-
-  /* ------------------------------------------------------------------------
-     F. Boulders, Crystals & Vegetation
-     ------------------------------------------------------------------------ */
-  createVegetationAndRocks() {
-    const rocksGroup = new THREE.Group();
-    const rockGeo = new THREE.DodecahedronGeometry(0.5, 0);
-    const rockMat = new THREE.MeshStandardMaterial({
-      color: 0x64748b,
-      flatShading: true,
-      roughness: 0.9
-    });
-
-    // Scatter rocks around edges
-    for (let i = 0; i < 18; i++) {
-      const angle = (i / 18) * Math.PI * 2;
-      const radius = 11 + Math.random() * 2.5;
-      const rock = new THREE.Mesh(rockGeo, rockMat);
-      rock.position.set(
-        Math.cos(angle) * radius,
-        2.2,
-        Math.sin(angle) * radius
-      );
-      const s = 0.4 + Math.random() * 0.8;
-      rock.scale.set(s, s * 0.7, s);
-      rock.rotation.set(Math.random(), Math.random(), Math.random());
-      rock.castShadow = true;
-      rocksGroup.add(rock);
-    }
-
-    this.worldGroup.add(rocksGroup);
-  }
-
-  /* ------------------------------------------------------------------------
-     G. Cozy Campfire & Overlook Spot (Near "About Me")
-     ------------------------------------------------------------------------ */
-  createCampfireAndCampsite() {
-    const campGroup = new THREE.Group();
-
-    // Campfire ring stones
-    const stoneGeo = new THREE.DodecahedronGeometry(0.18, 0);
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x475569, flatShading: true });
-    for (let i = 0; i < 8; i++) {
-      const stone = new THREE.Mesh(stoneGeo, stoneMat);
-      const a = (i / 8) * Math.PI * 2;
-      stone.position.set(Math.cos(a) * 0.5, 0.1, Math.sin(a) * 0.5);
-      campGroup.add(stone);
-    }
-
-    // Wood logs
-    const logGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.7, 5);
-    const logMat = new THREE.MeshStandardMaterial({ color: 0x78350f, flatShading: true });
-    for (let i = 0; i < 3; i++) {
-      const log = new THREE.Mesh(logGeo, logMat);
-      log.rotation.z = Math.PI / 4;
-      log.rotation.y = (i / 3) * Math.PI;
-      log.position.y = 0.2;
-      campGroup.add(log);
-    }
-
-    // Fire flame crystal
-    const fireGeo = new THREE.ConeGeometry(0.35, 0.7, 5);
-    const fireMat = new THREE.MeshStandardMaterial({
-      color: 0xf97316,
-      emissive: 0xf59e0b,
-      emissiveIntensity: 1.4,
-      flatShading: true
-    });
-    const flame = new THREE.Mesh(fireGeo, fireMat);
-    flame.position.y = 0.45;
-    campGroup.add(flame);
-
-    // Flickering Point Light
-    const fireLight = new THREE.PointLight(0xf97316, 2.2, 7);
-    fireLight.position.y = 0.6;
-    campGroup.add(fireLight);
-    this.animatedObjects.campfireLight = fireLight;
-
-    // Cozy camping chair / log bench
-    const bench = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.35, 1.1),
-      new THREE.MeshStandardMaterial({ color: 0xb45309, flatShading: true })
+    // Main Avenue (runs East-West)
+    const mainAvenue = new THREE.Mesh(
+      new THREE.BoxGeometry(38, 0.12, 3.8),
+      new THREE.MeshStandardMaterial({ color: CONFIG.colors.road, roughness: 0.9 })
     );
-    bench.position.set(-1.2, 0.2, 0);
-    bench.rotation.y = 0.2;
-    campGroup.add(bench);
+    mainAvenue.position.set(0, 2.82, 0);
+    mainAvenue.receiveShadow = true;
+    roadsGroup.add(mainAvenue);
 
-    campGroup.position.set(-5.8, 2.3, 3.8);
-    this.worldGroup.add(campGroup);
-  }
+    // Cross Street (runs North-South connecting Astropulse & residential)
+    const crossStreet = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 0.12, 32),
+      new THREE.MeshStandardMaterial({ color: CONFIG.colors.road, roughness: 0.9 })
+    );
+    crossStreet.position.set(2, 2.82, 0);
+    crossStreet.receiveShadow = true;
+    roadsGroup.add(crossStreet);
 
-  /* ------------------------------------------------------------------------
-     H. Mountain Windmill (Near "Skills")
-     ------------------------------------------------------------------------ */
-  createWindmill() {
-    const windmillGroup = new THREE.Group();
-
-    // Tower base (conical low-poly)
-    const towerGeo = new THREE.CylinderGeometry(0.7, 1.2, 5, 8);
-    const towerMat = new THREE.MeshStandardMaterial({
-      color: 0xf8fafc,
-      flatShading: true,
-      roughness: 0.6
-    });
-    const tower = new THREE.Mesh(towerGeo, towerMat);
-    tower.position.y = 2.5;
-    tower.castShadow = true;
-    windmillGroup.add(tower);
-
-    // Roof cap
-    const capGeo = new THREE.ConeGeometry(0.9, 1.2, 8);
-    const capMat = new THREE.MeshStandardMaterial({
-      color: 0x9333ea,
-      flatShading: true
-    });
-    const cap = new THREE.Mesh(capGeo, capMat);
-    cap.position.y = 5.5;
-    windmillGroup.add(cap);
-
-    // Hub and Blades
-    const bladesGroup = new THREE.Group();
-    bladesGroup.position.set(0, 4.8, 0.8);
-
-    const hubGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.3, 8);
-    const hubMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
-    const hub = new THREE.Mesh(hubGeo, hubMat);
-    hub.rotation.x = Math.PI / 2;
-    bladesGroup.add(hub);
-
-    // 4 Blades
-    const bladeGeo = new THREE.BoxGeometry(0.35, 2.6, 0.05);
-    const bladeMat = new THREE.MeshStandardMaterial({
-      color: 0xf1f5f9,
-      flatShading: true
-    });
-    for (let i = 0; i < 4; i++) {
-      const blade = new THREE.Mesh(bladeGeo, bladeMat);
-      blade.position.y = 1.2;
-      const arm = new THREE.Group();
-      arm.rotation.z = (i * Math.PI) / 2;
-      arm.add(blade);
-      bladesGroup.add(arm);
+    // Painted Center Lines (white dashed strips)
+    const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+    for (let x = -17; x <= 17; x += 3) {
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.14, 0.15), stripeMat);
+      stripe.position.set(x, 2.83, 0);
+      roadsGroup.add(stripe);
     }
 
-    windmillGroup.add(bladesGroup);
-    this.animatedObjects.windmillBlades = bladesGroup;
+    // Pedestrian Zebra Crossings
+    for (let i = -1.5; i <= 1.5; i += 0.5) {
+      const zebra = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.14, 2.8), stripeMat);
+      zebra.position.set(5.5, 2.83, i);
+      roadsGroup.add(zebra);
+    }
 
-    windmillGroup.position.set(2.8, 4.8, -4.2);
-    windmillGroup.scale.set(0.9, 0.9, 0.9);
-    this.worldGroup.add(windmillGroup);
+    this.worldGroup.add(roadsGroup);
   }
 
   /* ------------------------------------------------------------------------
-     I. Futuristic AI Tech Hub (Near "Nexora AI")
+     D. ASTROPULSE SMM CORPORATE CAMPUS (With Animated Gate & 8 Employees)
      ------------------------------------------------------------------------ */
-  createAiTechStation() {
-    const aiGroup = new THREE.Group();
+  createAstropulseSMMIndustry() {
+    const campus = new THREE.Group();
 
-    // Hexagonal glowing pedestal
-    const pedestalGeo = new THREE.CylinderGeometry(1.8, 2.2, 0.6, 6);
-    const pedestalMat = new THREE.MeshStandardMaterial({
+    // Campus foundation plaza (sleek stone paving)
+    const plaza = new THREE.Mesh(
+      new THREE.BoxGeometry(16, 0.2, 14),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 })
+    );
+    plaza.position.set(11, 2.85, -8);
+    plaza.receiveShadow = true;
+    campus.add(plaza);
+
+    // Main Corporate Tower (Multi-tier modern glass & steel building)
+    const towerMat = new THREE.MeshStandardMaterial({
       color: 0x0f172a,
-      flatShading: true,
-      roughness: 0.3
+      roughness: 0.3,
+      flatShading: true
     });
-    const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
-    pedestal.position.y = 0.3;
-    aiGroup.add(pedestal);
-
-    // Floating Neon AI Energy Crystal (Octahedron)
-    const crystalGeo = new THREE.OctahedronGeometry(1.1, 0);
-    const crystalMat = new THREE.MeshStandardMaterial({
-      color: 0x14b8a6,
-      emissive: 0x0d9488,
-      emissiveIntensity: 0.8,
-      roughness: 0.2,
-      wireframe: false
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x06b6d4,
+      emissive: 0x0891b2,
+      emissiveIntensity: 0.45,
+      roughness: 0.1
     });
-    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
-    crystal.position.y = 2.0;
-    aiGroup.add(crystal);
-    this.animatedObjects.aiCrystal = crystal;
 
-    // Glowing satellite communications ring
-    const ringGeo = new THREE.TorusGeometry(1.6, 0.08, 8, 24);
-    const ringMat = new THREE.MeshStandardMaterial({
-      color: 0x6366f1,
-      emissive: 0x6366f1,
-      emissiveIntensity: 0.6
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2.5;
-    ring.position.y = 2.0;
-    aiGroup.add(ring);
-    this.animatedObjects.aiRing = ring;
+    // Tier 1 Base
+    const b1 = new THREE.Mesh(new THREE.BoxGeometry(7, 4.5, 6), towerMat);
+    b1.position.set(12, 5.0, -8.5);
+    b1.castShadow = true;
+    campus.add(b1);
 
-    aiGroup.position.set(6.8, 2.3, 3.2);
-    this.worldGroup.add(aiGroup);
+    // Tier 2 Mid
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(5.5, 3.5, 5), towerMat);
+    b2.position.set(12, 9.0, -8.5);
+    b2.castShadow = true;
+    campus.add(b2);
+
+    // Glowing Cyan Ribbon Windows
+    const win1 = new THREE.Mesh(new THREE.BoxGeometry(7.1, 0.8, 4.8), glassMat);
+    win1.position.set(12, 4.8, -8.5);
+    const win2 = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.7, 3.8), glassMat);
+    win2.position.set(12, 8.8, -8.5);
+    campus.add(win1, win2);
+
+    // Neon 3D Rooftop Sign: "ASTROPULSE SMM"
+    const signBoard = new THREE.Mesh(
+      new THREE.BoxGeometry(5.2, 1.2, 0.25),
+      new THREE.MeshStandardMaterial({
+        color: 0x0284c7,
+        emissive: 0x06b6d4,
+        emissiveIntensity: 0.9,
+        flatShading: true
+      })
+    );
+    signBoard.position.set(12, 11.4, -6.1);
+    campus.add(signBoard);
+
+    // Satellite Dish & Roof Antenna
+    const dish = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 0.1, 0.3, 10),
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0 })
+    );
+    dish.rotation.x = Math.PI / 3;
+    dish.position.set(13.2, 11.5, -8.5);
+    campus.add(dish);
+
+    // Security Perimeter Fence
+    const fenceMat = new THREE.MeshStandardMaterial({ color: 0x64748b });
+    const fence1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.2, 12), fenceMat);
+    fence1.position.set(18.2, 3.4, -8);
+    const fence2 = new THREE.Mesh(new THREE.BoxGeometry(14, 1.2, 0.15), fenceMat);
+    fence2.position.set(11, 3.4, -14.2);
+    campus.add(fence1, fence2);
+
+    // --- AUTOMATED SECURITY BARRIER GATE ---
+    const gateGroup = new THREE.Group();
+    gateGroup.position.set(4.5, 2.9, -4.5);
+
+    // Gate Control Booth
+    const booth = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 2.2, 1.4),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, flatShading: true })
+    );
+    booth.position.set(0, 1.1, 0);
+    booth.castShadow = true;
+    gateGroup.add(booth);
+
+    // Gate Barrier Post
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.18, 1.3, 8),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b })
+    );
+    post.position.set(1.4, 0.65, 0);
+    gateGroup.add(post);
+
+    // Motorized Barrier Bar (Arm that rotates up and down!)
+    const barArm = new THREE.Group();
+    barArm.position.set(1.4, 1.1, 0);
+
+    const barMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(3.2, 0.12, 0.08),
+      new THREE.MeshStandardMaterial({
+        color: 0xef4444, // Red & white security striped bar
+        emissive: 0xd97706,
+        emissiveIntensity: 0.3
+      })
+    );
+    barMesh.position.set(1.6, 0, 0);
+    barArm.add(barMesh);
+    gateGroup.add(barArm);
+
+    this.animatedObjects.smmGate = barArm;
+    campus.add(gateGroup);
+
+    // --- 8 EMPLOYEES WITH SPECIFIC ASSIGNED ROLES ---
+    this.createSmmEmployees(campus);
+
+    this.worldGroup.add(campus);
   }
 
   /* ------------------------------------------------------------------------
-     J. Lush Terraced Crop Fields (Near "CropIndia AI")
+     E. 8 Astropulse SMM Employees with Assigned Jobs
      ------------------------------------------------------------------------ */
-  createCropTerraces() {
+  createSmmEmployees(campus) {
+    const makePerson = (shirtColor, pantsColor = 0x1e293b) => {
+      const person = new THREE.Group();
+      // Legs
+      const legGeo = new THREE.BoxGeometry(0.14, 0.45, 0.14);
+      const legMat = new THREE.MeshStandardMaterial({ color: pantsColor });
+      const lLeg = new THREE.Mesh(legGeo, legMat);
+      lLeg.position.set(-0.1, 0.22, 0);
+      const rLeg = new THREE.Mesh(legGeo, legMat);
+      rLeg.position.set(0.1, 0.22, 0);
+      person.add(lLeg, rLeg);
+
+      // Torso
+      const torsoGeo = new THREE.BoxGeometry(0.32, 0.48, 0.24);
+      const torsoMat = new THREE.MeshStandardMaterial({ color: shirtColor, flatShading: true });
+      const torso = new THREE.Mesh(torsoGeo, torsoMat);
+      torso.position.y = 0.68;
+      person.add(torso);
+
+      // Head
+      const headGeo = new THREE.SphereGeometry(0.15, 6, 6);
+      const headMat = new THREE.MeshStandardMaterial({ color: 0xfbcfe8, flatShading: true });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 1.05;
+      person.add(head);
+
+      // Left & Right Arms for animating
+      const armGeo = new THREE.BoxGeometry(0.1, 0.38, 0.1);
+      const armMat = new THREE.MeshStandardMaterial({ color: shirtColor });
+      const lArm = new THREE.Mesh(armGeo, armMat);
+      lArm.position.set(-0.24, 0.65, 0);
+      const rArm = new THREE.Mesh(armGeo, armMat);
+      rArm.position.set(0.24, 0.65, 0);
+      person.add(lArm, rArm);
+
+      person.scale.set(0.85, 0.85, 0.85);
+      return { group: person, lArm, rArm, head, torso, lLeg, rLeg };
+    };
+
+    // 1. Security Officer at the gate booth (salutes / operates gate)
+    const guard = makePerson(0x1e3a8a, 0x0f172a); // Navy uniform
+    guard.group.position.set(5.8, 2.9, -4.2);
+    guard.role = 'guard';
+    campus.add(guard.group);
+
+    // 2. Server & Database Engineer in the tech wing (typing at server rack)
+    const serverEng = makePerson(0x0284c7); // Blue shirt
+    serverEng.group.position.set(14.8, 2.9, -6.5);
+    serverEng.role = 'server_engineer';
+    // Server rack next to them
+    const rack = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 2.2, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, emissive: 0x10b981, emissiveIntensity: 0.35 })
+    );
+    rack.position.set(15.5, 3.9, -6.5);
+    campus.add(rack);
+    campus.add(serverEng.group);
+
+    // 3. Social Media Growth Strategist (gesturing at glowing analytics board)
+    const strategist = makePerson(0x8b5cf6); // Purple blazer
+    strategist.group.position.set(8.5, 2.9, -9.2);
+    strategist.role = 'strategist';
+    // Holographic social analytics board
+    const board = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 1.1, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.8 })
+    );
+    board.position.set(8.5, 4.2, -10.2);
+    campus.add(board);
+    campus.add(strategist.group);
+
+    // 4. Customer Support Executive (wearing headset, nodding)
+    const support = makePerson(0xec4899); // Pink
+    support.group.position.set(10.2, 2.9, -6.8);
+    support.role = 'support';
+    campus.add(support.group);
+
+    // 5. Courier / Dispatch Runner (walking between gate & office with package)
+    const courier = makePerson(0xf59e0b); // Orange delivery uniform
+    courier.group.position.set(7.0, 2.9, -5.5);
+    // Package box in hands
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.26, 0.28),
+      new THREE.MeshStandardMaterial({ color: 0xd97706 })
+    );
+    box.position.set(0, 0.65, 0.28);
+    courier.group.add(box);
+    courier.role = 'courier';
+    campus.add(courier.group);
+
+    // 6. Coffee Break Colleague (holding coffee mug at the terrace)
+    const coffeeEmp = makePerson(0x10b981); // Emerald
+    coffeeEmp.group.position.set(15.2, 2.9, -11.5);
+    const mug = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 0.12, 6),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
+    mug.position.set(0.24, 0.75, 0.15);
+    coffeeEmp.group.add(mug);
+    coffeeEmp.role = 'coffee';
+    campus.add(coffeeEmp.group);
+
+    // 7. Creative Graphic Designer (working at desk)
+    const designer = makePerson(0x38bdf8); // Light cyan
+    designer.group.position.set(11.8, 2.9, -11.2);
+    designer.role = 'designer';
+    campus.add(designer.group);
+
+    // 8. API Automation Engineer (inspecting throughput)
+    const apiEng = makePerson(0xa855f7); // Violet
+    apiEng.group.position.set(13.6, 2.9, -12.5);
+    apiEng.role = 'api_eng';
+    campus.add(apiEng.group);
+
+    this.animatedObjects.smmEmployees = [
+      guard, serverEng, strategist, support, courier, coffeeEmp, designer, apiEng
+    ];
+  }
+
+  /* ------------------------------------------------------------------------
+     F. Residential District with Houses & Commuter Path
+     ------------------------------------------------------------------------ */
+  createResidentialDistrict() {
+    const resGroup = new THREE.Group();
+
+    const houseDefs = [
+      { x: -12, z: 2, roofColor: 0xef4444, bodyColor: 0xf8fafc },
+      { x: -16, z: 2, roofColor: 0x06b6d4, bodyColor: 0xf1f5f9 },
+      { x: -14, z: -3, roofColor: 0xf59e0b, bodyColor: 0xfef08a },
+      { x: -18, z: -3, roofColor: 0x8b5cf6, bodyColor: 0xf3e8ff }
+    ];
+
+    houseDefs.forEach((def, i) => {
+      const house = new THREE.Group();
+      // Body
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(3.0, 2.4, 2.8),
+        new THREE.MeshStandardMaterial({ color: def.bodyColor, flatShading: true })
+      );
+      body.position.y = 1.2;
+      body.castShadow = true;
+      house.add(body);
+
+      // Pitched Roof
+      const roof = new THREE.Mesh(
+        new THREE.ConeGeometry(2.4, 1.5, 4),
+        new THREE.MeshStandardMaterial({ color: def.roofColor, flatShading: true })
+      );
+      roof.position.y = 3.1;
+      roof.rotation.y = Math.PI / 4;
+      roof.castShadow = true;
+      house.add(roof);
+
+      // Doorway
+      const door = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 1.2, 0.1),
+        new THREE.MeshStandardMaterial({ color: 0x78350f })
+      );
+      door.position.set(0, 0.6, 1.41);
+      house.add(door);
+
+      // Chimney
+      const chimney = new THREE.Mesh(
+        new THREE.BoxGeometry(0.35, 0.8, 0.35),
+        new THREE.MeshStandardMaterial({ color: 0x94a3b8 })
+      );
+      chimney.position.set(0.8, 3.2, -0.6);
+      house.add(chimney);
+
+      house.position.set(def.x, 2.85, def.z);
+      resGroup.add(house);
+    });
+
+    this.worldGroup.add(resGroup);
+  }
+
+  /* ------------------------------------------------------------------------
+     G. Commuter Who Leaves House, Walks to City, & Returns Home
+     ------------------------------------------------------------------------ */
+  createWalkingCommuter() {
+    const commuterGroup = new THREE.Group();
+
+    // Body parts
+    const legGeo = new THREE.BoxGeometry(0.14, 0.45, 0.14);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+    const lLeg = new THREE.Mesh(legGeo, legMat);
+    lLeg.position.set(-0.1, 0.22, 0);
+    const rLeg = new THREE.Mesh(legGeo, legMat);
+    rLeg.position.set(0.1, 0.22, 0);
+    commuterGroup.add(lLeg, rLeg);
+
+    const torso = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.5, 0.24),
+      new THREE.MeshStandardMaterial({ color: 0x2563eb, flatShading: true }) // Blue commuter jacket
+    );
+    torso.position.y = 0.7;
+    commuterGroup.add(torso);
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 6, 6),
+      new THREE.MeshStandardMaterial({ color: 0xfbcfe8, flatShading: true })
+    );
+    head.position.y = 1.08;
+    commuterGroup.add(head);
+
+    const armGeo = new THREE.BoxGeometry(0.1, 0.38, 0.1);
+    const armMat = new THREE.MeshStandardMaterial({ color: 0x2563eb });
+    const lArm = new THREE.Mesh(armGeo, armMat);
+    lArm.position.set(-0.24, 0.65, 0);
+    const rArm = new THREE.Mesh(armGeo, armMat);
+    rArm.position.set(0.24, 0.65, 0);
+    commuterGroup.add(lArm, rArm);
+
+    // Briefcase in hand
+    const bag = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.22, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0x78350f })
+    );
+    bag.position.set(0.32, 0.42, 0);
+    commuterGroup.add(bag);
+
+    commuterGroup.scale.set(0.9, 0.9, 0.9);
+    commuterGroup.position.set(-12, 2.9, 3.4); // Start right outside house front door!
+
+    this.worldGroup.add(commuterGroup);
+    this.animatedObjects.commuter = {
+      group: commuterGroup,
+      lLeg, rLeg, lArm, rArm
+    };
+  }
+
+  /* ------------------------------------------------------------------------
+     H. The Wobbly Cyclist Who Falls Down & Recovers!
+     ------------------------------------------------------------------------ */
+  createFallingCyclist() {
+    const cyclistGroup = new THREE.Group();
+
+    // Bike Frame
+    const bike = new THREE.Group();
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.1, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0xef4444 }) // Vibrant red sports bike
+    );
+    frame.position.y = 0.38;
+    bike.add(frame);
+
+    // Wheels
+    const wGeo = new THREE.TorusGeometry(0.22, 0.04, 6, 12);
+    const wMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+    const w1 = new THREE.Mesh(wGeo, wMat);
+    w1.position.set(-0.4, 0.22, 0);
+    const w2 = new THREE.Mesh(wGeo, wMat);
+    w2.position.set(0.4, 0.22, 0);
+    bike.add(w1, w2);
+
+    // Handlebars
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.25, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0x64748b })
+    );
+    bar.position.set(0.35, 0.55, 0);
+    bike.add(bar);
+
+    cyclistGroup.add(bike);
+
+    // Rider Figure
+    const rider = new THREE.Group();
+    const torso = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.48, 0.26),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, flatShading: true }) // Yellow cycling jersey
+    );
+    torso.position.set(0, 0.72, 0);
+    torso.rotation.z = -0.22;
+    rider.add(torso);
+
+    // Helmet
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 6, 6),
+      new THREE.MeshStandardMaterial({ color: 0x06b6d4, flatShading: true }) // Cyan bike helmet
+    );
+    head.position.set(0.12, 1.05, 0);
+    rider.add(head);
+
+    cyclistGroup.add(rider);
+    cyclistGroup.position.set(0, 2.9, 1.2);
+    this.worldGroup.add(cyclistGroup);
+
+    this.animatedObjects.cyclist = {
+      group: cyclistGroup,
+      bike,
+      rider
+    };
+  }
+
+  /* ------------------------------------------------------------------------
+     I. Terraced Farm & Animated Hoeing Farmer
+     ------------------------------------------------------------------------ */
+  createCropTerracesAndFarmer() {
     const cropGroup = new THREE.Group();
 
-    // Terraced stepped planters
+    // Terraced plots
     const levels = [
-      { y: 0.2, r: 2.2, color: 0x15803d },
-      { y: 0.6, r: 1.6, color: 0x22c55e },
-      { y: 1.0, r: 1.0, color: 0x86efac }
+      { y: 0.2, r: 3.0, color: 0x15803d },
+      { y: 0.6, r: 2.2, color: 0x22c55e },
+      { y: 1.0, r: 1.4, color: 0x86efac }
     ];
 
     levels.forEach(lvl => {
-      const geo = new THREE.CylinderGeometry(lvl.r, lvl.r + 0.3, 0.4, 6);
+      const geo = new THREE.CylinderGeometry(lvl.r, lvl.r + 0.4, 0.45, 8);
       const mat = new THREE.MeshStandardMaterial({
         color: lvl.color,
         flatShading: true,
@@ -992,107 +1032,384 @@ class PortfolioApp {
       cropGroup.add(mesh);
     });
 
-    // Stylized golden wheat sprouts / crops
-    const wheatGeo = new THREE.ConeGeometry(0.12, 0.5, 4);
-    const wheatMat = new THREE.MeshStandardMaterial({
-      color: 0xfacc15,
-      flatShading: true
-    });
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2;
+    // Golden wheat stalks
+    const wheatGeo = new THREE.ConeGeometry(0.12, 0.55, 4);
+    const wheatMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, flatShading: true });
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
       const wheat = new THREE.Mesh(wheatGeo, wheatMat);
-      wheat.position.set(Math.cos(a) * 0.7, 1.4, Math.sin(a) * 0.7);
+      wheat.position.set(Math.cos(a) * 1.0, 1.5, Math.sin(a) * 1.0);
       cropGroup.add(wheat);
     }
 
-    cropGroup.position.set(-4.5, 2.3, -4.8);
+    cropGroup.position.set(-7, 2.85, -7);
     this.worldGroup.add(cropGroup);
+
+    // --- ANIMATED FARMER CHARACTER ---
+    const farmer = new THREE.Group();
+
+    // Legs
+    const lLeg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.14, 0.45, 0.14),
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a }) // Blue denim overalls
+    );
+    lLeg.position.set(-0.1, 0.22, 0);
+    const rLeg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.14, 0.45, 0.14),
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a })
+    );
+    rLeg.position.set(0.1, 0.22, 0);
+    farmer.add(lLeg, rLeg);
+
+    // Torso with farming shirt
+    const torso = new THREE.Mesh(
+      new THREE.BoxGeometry(0.34, 0.5, 0.26),
+      new THREE.MeshStandardMaterial({ color: 0xb45309, flatShading: true }) // Plaid/orange work shirt
+    );
+    torso.position.y = 0.7;
+    farmer.add(torso);
+
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 6, 6),
+      new THREE.MeshStandardMaterial({ color: 0xfbcfe8, flatShading: true })
+    );
+    head.position.y = 1.06;
+    farmer.add(head);
+
+    // Straw Hat!
+    const hatBrim = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.38, 0.38, 0.05, 8),
+      new THREE.MeshStandardMaterial({ color: 0xfde047, flatShading: true })
+    );
+    hatBrim.position.y = 1.18;
+    farmer.add(hatBrim);
+
+    // Farming Hoe Tool
+    const hoeArm = new THREE.Group();
+    hoeArm.position.set(0.24, 0.75, 0);
+
+    const handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 1.2, 5),
+      new THREE.MeshStandardMaterial({ color: 0x78350f })
+    );
+    handle.rotation.x = Math.PI / 3;
+    handle.position.set(0, -0.3, 0.4);
+    hoeArm.add(handle);
+
+    const blade = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 0.15, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0x64748b })
+    );
+    blade.position.set(0, -0.75, 0.85);
+    hoeArm.add(blade);
+    farmer.add(hoeArm);
+
+    farmer.scale.set(0.85, 0.85, 0.85);
+    farmer.position.set(-6.2, 2.9, -5.8);
+    this.worldGroup.add(farmer);
+
+    this.animatedObjects.farmer = {
+      group: farmer,
+      torso,
+      hoeArm
+    };
   }
 
   /* ------------------------------------------------------------------------
-     K. Animated Tiny Cyclist along the road
+     J. Welcome Guide Narrator Who Gestures With Both Hands
      ------------------------------------------------------------------------ */
-  createCyclist() {
-    const cyclist = new THREE.Group();
+  createAboutPlazaAndGuide() {
+    const plaza = new THREE.Group();
 
-    // Bike Frame (cyan accent)
-    const frameGeo = new THREE.BoxGeometry(0.7, 0.1, 0.1);
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4 });
-    const frame = new THREE.Mesh(frameGeo, frameMat);
-    frame.position.y = 0.35;
-    cyclist.add(frame);
+    // Low-poly guide representing Murari Kumar
+    const guide = new THREE.Group();
 
-    // Wheels
-    const wGeo = new THREE.TorusGeometry(0.2, 0.04, 6, 12);
-    const wMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
-    const w1 = new THREE.Mesh(wGeo, wMat);
-    w1.position.set(-0.35, 0.2, 0);
-    const w2 = new THREE.Mesh(wGeo, wMat);
-    w2.position.set(0.35, 0.2, 0);
-    cyclist.add(w1, w2);
+    // Torso (stylish hoodie / dark tech wear)
+    const torso = new THREE.Mesh(
+      new THREE.BoxGeometry(0.34, 0.52, 0.26),
+      new THREE.MeshStandardMaterial({ color: 0x6366f1, flatShading: true }) // Indigo developer hoodie
+    );
+    torso.position.y = 0.72;
+    guide.add(torso);
 
-    // Rider Character (Torso + Head)
-    const torsoGeo = new THREE.BoxGeometry(0.25, 0.45, 0.25);
-    const torsoMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, flatShading: true });
-    const torso = new THREE.Mesh(torsoGeo, torsoMat);
-    torso.position.set(0, 0.65, 0);
-    torso.rotation.z = -0.2; // leaning forward
-    cyclist.add(torso);
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 6, 6),
+      new THREE.MeshStandardMaterial({ color: 0xfbcfe8, flatShading: true })
+    );
+    head.position.y = 1.1;
+    guide.add(head);
 
-    const headGeo = new THREE.SphereGeometry(0.14, 6, 6);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xfbcfe8, flatShading: true });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.set(0.1, 0.98, 0);
-    cyclist.add(head);
+    // Glasses / Tech accessory
+    const glasses = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 0.08, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a })
+    );
+    glasses.position.set(0, 1.1, 0.15);
+    guide.add(glasses);
 
-    cyclist.scale.set(0.9, 0.9, 0.9);
-    this.worldGroup.add(cyclist);
-    this.animatedObjects.cyclist = cyclist;
+    // Left Arm (with pivot at shoulder)
+    const lArmPivot = new THREE.Group();
+    lArmPivot.position.set(-0.25, 0.88, 0);
+    const lArmMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.45, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x6366f1 })
+    );
+    lArmMesh.position.y = -0.22;
+    lArmPivot.add(lArmMesh);
+    guide.add(lArmPivot);
+
+    // Right Arm (with pivot at shoulder)
+    const rArmPivot = new THREE.Group();
+    rArmPivot.position.set(0.25, 0.88, 0);
+    const rArmMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.45, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x6366f1 })
+    );
+    rArmMesh.position.y = -0.22;
+    rArmPivot.add(rArmMesh);
+    guide.add(rArmPivot);
+
+    // Legs
+    const legGeo = new THREE.BoxGeometry(0.15, 0.48, 0.15);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+    const lLeg = new THREE.Mesh(legGeo, legMat);
+    lLeg.position.set(-0.1, 0.24, 0);
+    const rLeg = new THREE.Mesh(legGeo, legMat);
+    rLeg.position.set(0.1, 0.24, 0);
+    guide.add(lLeg, rLeg);
+
+    guide.scale.set(0.9, 0.9, 0.9);
+    guide.position.set(-7.5, 2.9, 6.5);
+    guide.rotation.y = Math.PI * 0.15;
+    plaza.add(guide);
+
+    this.worldGroup.add(plaza);
+    this.animatedObjects.guide = {
+      group: guide,
+      lArm: lArmPivot,
+      rArm: rArmPivot,
+      head
+    };
   }
 
   /* ------------------------------------------------------------------------
-     L. Floating Low-Poly Clouds
+     K. Camper Van & Overlook Campsite
+     ------------------------------------------------------------------------ */
+  createCamperVanAndCampsite() {
+    const vanGroup = new THREE.Group();
+
+    // Coral Camper Van
+    const bodyMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.camperCoral, flatShading: true });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.4, 1.7), bodyMat);
+    body.position.y = 1.0;
+    body.castShadow = true;
+    vanGroup.add(body);
+
+    const roofMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.camperWhite, flatShading: true });
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.75, 1.6), roofMat);
+    roof.position.set(0, 1.8, 0);
+    roof.castShadow = true;
+    vanGroup.add(roof);
+
+    // Surfboard & Roof Rack
+    const surfboard = new THREE.Mesh(
+      new THREE.BoxGeometry(2.1, 0.1, 0.55),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, flatShading: true })
+    );
+    surfboard.position.set(-0.3, 2.35, 0.2);
+    vanGroup.add(surfboard);
+
+    // Headlights
+    const hlMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.8 });
+    const hl1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, 0.22), hlMat);
+    hl1.position.set(1.51, 0.9, 0.55);
+    const hl2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, 0.22), hlMat);
+    hl2.position.set(1.51, 0.9, -0.55);
+    vanGroup.add(hl1, hl2);
+
+    vanGroup.position.set(-9.5, 2.9, 8.5);
+    vanGroup.rotation.y = Math.PI * 0.28;
+    this.worldGroup.add(vanGroup);
+    this.animatedObjects.van = vanGroup;
+
+    // Campfire & Flickering Point Light
+    const campGroup = new THREE.Group();
+    const flame = new THREE.Mesh(
+      new THREE.ConeGeometry(0.35, 0.7, 5),
+      new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xf59e0b, emissiveIntensity: 1.5, flatShading: true })
+    );
+    flame.position.y = 0.45;
+    campGroup.add(flame);
+
+    const fireLight = new THREE.PointLight(0xf97316, 2.2, 8);
+    fireLight.position.y = 0.6;
+    campGroup.add(fireLight);
+    this.animatedObjects.campfireLight = fireLight;
+
+    campGroup.position.set(-7.5, 2.9, 4.8);
+    this.worldGroup.add(campGroup);
+  }
+
+  /* ------------------------------------------------------------------------
+     L. Mountain Windmill
+     ------------------------------------------------------------------------ */
+  createWindmill() {
+    const windmill = new THREE.Group();
+    const tower = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 1.4, 5.5, 8),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc, flatShading: true })
+    );
+    tower.position.y = 2.75;
+    tower.castShadow = true;
+    windmill.add(tower);
+
+    const bladesGroup = new THREE.Group();
+    bladesGroup.position.set(0, 5.2, 0.9);
+
+    const bladeGeo = new THREE.BoxGeometry(0.35, 2.8, 0.05);
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, flatShading: true });
+    for (let i = 0; i < 4; i++) {
+      const blade = new THREE.Mesh(bladeGeo, bladeMat);
+      blade.position.y = 1.3;
+      const arm = new THREE.Group();
+      arm.rotation.z = (i * Math.PI) / 2;
+      arm.add(blade);
+      bladesGroup.add(arm);
+    }
+    windmill.add(bladesGroup);
+    this.animatedObjects.windmillBlades = bladesGroup;
+
+    windmill.position.set(4.8, 4.8, -5.8);
+    this.worldGroup.add(windmill);
+  }
+
+  /* ------------------------------------------------------------------------
+     M. Futuristic Nexora AI Tech Station
+     ------------------------------------------------------------------------ */
+  createAiTechStation() {
+    const aiGroup = new THREE.Group();
+
+    const pedestal = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.0, 2.4, 0.6, 6),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, flatShading: true })
+    );
+    pedestal.position.y = 0.3;
+    aiGroup.add(pedestal);
+
+    const crystal = new THREE.Mesh(
+      new THREE.OctahedronGeometry(1.2, 0),
+      new THREE.MeshStandardMaterial({
+        color: 0x14b8a6,
+        emissive: 0x0d9488,
+        emissiveIntensity: 0.85,
+        flatShading: true
+      })
+    );
+    crystal.position.y = 2.2;
+    aiGroup.add(crystal);
+    this.animatedObjects.aiCrystal = crystal;
+
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.8, 0.09, 8, 24),
+      new THREE.MeshStandardMaterial({ color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.6 })
+    );
+    ring.rotation.x = Math.PI / 2.5;
+    ring.position.y = 2.2;
+    aiGroup.add(ring);
+    this.animatedObjects.aiRing = ring;
+
+    aiGroup.position.set(8.5, 2.9, 5.2);
+    this.worldGroup.add(aiGroup);
+  }
+
+  /* ------------------------------------------------------------------------
+     N. Street Furniture, Streetlamps & Trees
+     ------------------------------------------------------------------------ */
+  createStreetFurnitureAndTrees() {
+    const furnGroup = new THREE.Group();
+
+    // Streetlamps with warm glowing heads
+    const lampGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.4, 6);
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 1.0 });
+
+    const lampPositions = [
+      [3.8, 1.8], [3.8, -2.5], [3.8, -7.5],
+      [-5.5, 1.8], [-10.5, 1.8], [-15.5, 1.8]
+    ];
+
+    lampPositions.forEach(([x, z]) => {
+      const lamp = new THREE.Group();
+      const pole = new THREE.Mesh(lampGeo, lampMat);
+      pole.position.y = 1.2;
+      lamp.add(pole);
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 6), bulbMat);
+      bulb.position.y = 2.4;
+      lamp.add(bulb);
+
+      lamp.position.set(x, 2.9, z);
+      furnGroup.add(lamp);
+    });
+
+    // Stylized Pine Trees scattered around perimeter
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.26, 1.0, 5);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, flatShading: true });
+    const folGeo = new THREE.ConeGeometry(1.4, 2.0, 5);
+    const folMat = new THREE.MeshStandardMaterial({ color: 0x15803d, flatShading: true });
+
+    const treeSpots = [
+      [-20, 8], [-18, 14], [-12, 16], [-5, 18],
+      [14, 12], [20, 6], [22, -2], [18, -16],
+      [-2, -18], [-14, -16], [-22, -8]
+    ];
+
+    treeSpots.forEach(([x, z]) => {
+      const tree = new THREE.Group();
+      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+      trunk.position.y = 0.5;
+      tree.add(trunk);
+
+      const fol = new THREE.Mesh(folGeo, folMat);
+      fol.position.y = 1.8;
+      fol.castShadow = true;
+      tree.add(fol);
+
+      tree.position.set(x, 2.9, z);
+      furnGroup.add(tree);
+    });
+
+    this.worldGroup.add(furnGroup);
+  }
+
+  /* ------------------------------------------------------------------------
+     O. Floating Clouds
      ------------------------------------------------------------------------ */
   createFloatingClouds() {
     const cloudMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       flatShading: true,
-      roughness: 0.3,
       transparent: true,
       opacity: 0.92
     });
 
-    const createSingleCloud = () => {
+    for (let i = 0; i < 7; i++) {
       const cloud = new THREE.Group();
-      const numPuffs = 4 + Math.floor(Math.random() * 3);
-
-      for (let i = 0; i < numPuffs; i++) {
-        const r = 0.9 + Math.random() * 1.1;
-        const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), cloudMat);
-        puff.position.set(
-          (i - numPuffs / 2) * 1.2,
-          (Math.random() - 0.5) * 0.4,
-          (Math.random() - 0.5) * 0.8
-        );
+      for (let j = 0; j < 5; j++) {
+        const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(1.2 + Math.random() * 0.8, 1), cloudMat);
+        puff.position.set((j - 2) * 1.3, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.8);
         cloud.add(puff);
       }
-      return cloud;
-    };
-
-    // Create 6 clouds at varied elevations and orbits
-    for (let i = 0; i < 6; i++) {
-      const cloud = createSingleCloud();
-      const angle = (i / 6) * Math.PI * 2;
-      const radius = 22 + Math.random() * 8;
-      cloud.position.set(
-        Math.cos(angle) * radius,
-        10 + Math.random() * 6,
-        Math.sin(angle) * radius
-      );
+      const angle = (i / 7) * Math.PI * 2;
+      const radius = 32 + Math.random() * 10;
+      cloud.position.set(Math.cos(angle) * radius, 14 + Math.random() * 8, Math.sin(angle) * radius);
       this.worldGroup.add(cloud);
+
       this.animatedObjects.clouds.push({
         mesh: cloud,
-        speed: 0.002 + Math.random() * 0.002,
+        speed: 0.0015 + Math.random() * 0.002,
         radius: radius,
         angle: angle,
         baseY: cloud.position.y
@@ -1101,39 +1418,37 @@ class PortfolioApp {
   }
 
   /* ------------------------------------------------------------------------
-     M. Ambient Floating Firefly / Mote Particles
+     P. Floating Firefly Particles
      ------------------------------------------------------------------------ */
   createFloatingParticles() {
-    const count = 120;
+    const count = 140;
     const geo = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const speeds = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 32;
-      positions[i * 3 + 1] = 2 + Math.random() * 12;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 32;
+      positions[i * 3] = (Math.random() - 0.5) * 48;
+      positions[i * 3 + 1] = 2.5 + Math.random() * 16;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 48;
       speeds[i] = 0.01 + Math.random() * 0.02;
     }
 
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    // Custom particle texture
     const canvas = document.createElement('canvas');
     canvas.width = 16;
     canvas.height = 16;
     const ctx = canvas.getContext('2d');
     const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
     grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    grad.addColorStop(0.5, 'rgba(168, 85, 247, 0.8)');
+    grad.addColorStop(0.5, 'rgba(6, 182, 212, 0.8)');
     grad.addColorStop(1, 'rgba(99, 102, 241, 0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 16, 16);
 
     const texture = new THREE.CanvasTexture(canvas);
-
     const mat = new THREE.PointsMaterial({
-      size: 0.45,
+      size: 0.5,
       map: texture,
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -1154,33 +1469,30 @@ class PortfolioApp {
     this.animatedObjects.hotspotMeshes = [];
 
     CONFIG.hotspots.forEach(spot => {
-      // 1. 3D Interactive Beacon Mesh
       const beaconGroup = new THREE.Group();
       beaconGroup.position.copy(spot.position);
       beaconGroup.userData = { id: spot.id, name: spot.name };
 
-      // Pulsing Outer Ring
-      const ringGeo = new THREE.RingGeometry(0.35, 0.48, 16);
+      const ringGeo = new THREE.RingGeometry(0.38, 0.52, 16);
       const ringMat = new THREE.MeshBasicMaterial({
         color: spot.color,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.75
+        opacity: 0.85
       });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
       ringMesh.rotation.x = -Math.PI / 2;
       beaconGroup.add(ringMesh);
 
-      // Floating Gem Icon
-      const gemGeo = new THREE.OctahedronGeometry(0.28, 0);
+      const gemGeo = new THREE.OctahedronGeometry(0.32, 0);
       const gemMat = new THREE.MeshStandardMaterial({
         color: spot.color,
         emissive: spot.color,
-        emissiveIntensity: 0.7,
+        emissiveIntensity: 0.75,
         roughness: 0.3
       });
       const gemMesh = new THREE.Mesh(gemGeo, gemMat);
-      gemMesh.position.y = 0.55;
+      gemMesh.position.y = 0.6;
       beaconGroup.add(gemMesh);
 
       this.worldGroup.add(beaconGroup);
@@ -1191,7 +1503,6 @@ class PortfolioApp {
         id: spot.id
       });
 
-      // 2. Projected 2D HTML Label
       const marker = document.createElement('div');
       marker.className = 'hotspot-marker';
       marker.id = `hotspot-marker-${spot.id}`;
@@ -1208,7 +1519,6 @@ class PortfolioApp {
         </div>
       `;
 
-      // Click on 2D label
       marker.addEventListener('click', (e) => {
         e.stopPropagation();
         this.navigateTo(spot.id);
@@ -1221,7 +1531,6 @@ class PortfolioApp {
     });
   }
 
-  // Update screen coordinates for 2D hotspot badges
   updateHotspotsProjection() {
     const tempV = new THREE.Vector3();
     const widthHalf = window.innerWidth / 2;
@@ -1231,10 +1540,9 @@ class PortfolioApp {
       if (!spot.domElement) return;
 
       tempV.copy(spot.position);
-      tempV.y += 0.8; // Position badge above the 3D beacon
+      tempV.y += 0.9;
       tempV.project(this.camera);
 
-      // Check if spot is in front of camera
       const isVisible = tempV.z < 1;
 
       if (isVisible) {
@@ -1264,19 +1572,15 @@ class PortfolioApp {
     this.currentSection = targetKey;
     audio.playWhoosh();
 
-    // Update active nav button state
     this.updateActiveNavState(targetKey);
 
-    // Disable auto tour during targeted transitions
     if (this.isTourActive && targetKey !== 'home') {
       this.toggleTour(false);
     }
 
-    // GSAP Dual Animation of Camera Position + Orbit Target
     const tl = gsap.timeline({
       onComplete: () => {
         this.isTransitioning = false;
-        // Open modal drawer for specific content sections
         if (targetKey !== 'home') {
           this.openModal(targetKey);
         } else {
@@ -1286,7 +1590,6 @@ class PortfolioApp {
       }
     });
 
-    // Dismiss hero card when focusing into a section
     if (targetKey !== 'home') {
       this.showHeroCard(false);
     }
@@ -1318,10 +1621,10 @@ class PortfolioApp {
     const templateEl = document.getElementById(`template-${sectionId}`);
     if (!templateEl) return;
 
-    // Titles & Categories Map
     const meta = {
       about: { category: 'STUDENT DEVELOPER', title: 'About Murari Kumar' },
       skills: { category: 'TECHNICAL ARSENAL', title: 'Skills & Engineering Stack' },
+      astropulse: { category: 'SMM PLATFORM & SERVICES', title: 'Astropulse SMM Provider' },
       nexora: { category: 'FEATURED AI PRODUCT', title: 'Nexora AI Web Builder' },
       cropindia: { category: 'INNOVATION CONCEPT', title: 'CropIndia AI' },
       education: { category: 'ACADEMICS', title: 'Diploma in Computer Science' },
@@ -1332,13 +1635,9 @@ class PortfolioApp {
     this.dom.modalCategory.textContent = info.category;
     this.dom.modalHeading.textContent = info.title;
 
-    // Clone content safely from template store
     this.dom.modalBody.innerHTML = templateEl.innerHTML;
-
-    // Reattach dynamic listeners inside modal (e.g., copy email)
     this.attachModalDynamicListeners();
 
-    // Show modal drawer
     this.dom.modalBackdrop.classList.add('open');
     audio.playClick();
   }
@@ -1386,11 +1685,7 @@ class PortfolioApp {
     audio.playClick();
   }
 
-  /* ------------------------------------------------------------------------
-     Attach UI Event Handlers
-     ------------------------------------------------------------------------ */
   initUIEvents() {
-    // Navigation bar links
     this.dom.navLinks.forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.getAttribute('data-target');
@@ -1398,7 +1693,6 @@ class PortfolioApp {
       });
     });
 
-    // Mobile nav links
     this.dom.mobileNavLinks.forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.getAttribute('data-target');
@@ -1407,12 +1701,10 @@ class PortfolioApp {
       });
     });
 
-    // Brand logo returns to overview
     this.dom.brandLogo.addEventListener('click', () => {
       this.navigateTo('home');
     });
 
-    // Hero buttons
     this.dom.heroCard.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => {
         const action = btn.getAttribute('data-action');
@@ -1425,7 +1717,6 @@ class PortfolioApp {
       });
     });
 
-    // Modal close & back buttons
     this.dom.modalCloseBtn.addEventListener('click', () => {
       this.closeModal();
       this.navigateTo('home');
@@ -1436,7 +1727,6 @@ class PortfolioApp {
       this.navigateTo('home');
     });
 
-    // Close modal on clicking backdrop outside panel
     this.dom.modalBackdrop.addEventListener('click', (e) => {
       if (e.target === this.dom.modalBackdrop) {
         this.closeModal();
@@ -1444,7 +1734,6 @@ class PortfolioApp {
       }
     });
 
-    // Audio toggle button
     this.dom.audioToggleBtn.addEventListener('click', () => {
       const isAudible = audio.toggle();
       const soundOn = this.dom.audioToggleBtn.querySelector('.icon-sound-on');
@@ -1460,13 +1749,9 @@ class PortfolioApp {
       }
     });
 
-    // Tour mode toggle button
     this.dom.tourToggleBtn.addEventListener('click', () => this.toggleTour());
-
-    // Reset camera button
     this.dom.resetCamBtn.addEventListener('click', () => this.navigateTo('home'));
 
-    // Mobile hamburger menu toggle
     this.dom.menuToggleBtn.addEventListener('click', () => {
       this.dom.mobileMenu.classList.add('open');
       audio.playClick();
@@ -1476,7 +1761,6 @@ class PortfolioApp {
       this.dom.mobileMenu.classList.remove('open');
     });
 
-    // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (this.dom.modalBackdrop.classList.contains('open')) {
@@ -1507,18 +1791,13 @@ class PortfolioApp {
             copyBtn.style.borderColor = '';
           }, 2400);
         }).catch(() => {
-          // Fallback if permission is blocked
           copyBtn.textContent = 'Select & Copy Email';
         });
       });
     }
   }
 
-  /* ------------------------------------------------------------------------
-     Pointer Raycasting for 3D clicks
-     ------------------------------------------------------------------------ */
   onPointerDown(e) {
-    // Ignore clicks on UI overlays
     if (e.target.closest('.top-nav') ||
         e.target.closest('.hero-card') ||
         e.target.closest('.modal-panel') ||
@@ -1554,10 +1833,10 @@ class PortfolioApp {
   simulateAssetLoading() {
     let progress = 0;
     const steps = [
-      { p: 25, msg: 'Sculpting low-poly purple mountains...' },
-      { p: 55, msg: 'Planting pine trees & winding road...' },
-      { p: 80, msg: 'Tuning camper van & lighting shaders...' },
-      { p: 100, msg: 'Miniature world ready!' }
+      { p: 25, msg: 'Expanding city island & road network...' },
+      { p: 55, msg: 'Constructing Astropulse SMM corporate campus...' },
+      { p: 80, msg: 'Assigning team jobs & activating automated gate...' },
+      { p: 100, msg: 'Miniature 3D city ready!' }
     ];
 
     let stepIdx = 0;
@@ -1574,7 +1853,6 @@ class PortfolioApp {
       }
     }, 280);
 
-    // Skip button fallback if visitor doesn't want to wait
     setTimeout(() => {
       this.dom.skipBtn.style.display = 'inline-block';
     }, 1500);
@@ -1587,18 +1865,17 @@ class PortfolioApp {
 
   finishLoading() {
     this.dom.loadingScreen.classList.add('hidden');
-    // Animate camera in smoothly from higher overview
     gsap.from(this.camera.position, {
-      y: 40,
-      z: 50,
-      duration: 2.2,
+      y: 50,
+      z: 65,
+      duration: 2.4,
       ease: 'power3.out',
       onUpdate: () => this.controls.update()
     });
   }
 
   /* ========================================================================
-     9. ANIMATION LOOP & TICK HANDLERS
+     9. ANIMATION LOOP & LIVE EVENT TICK HANDLERS
      ======================================================================== */
 
   onWindowResize() {
@@ -1614,44 +1891,211 @@ class PortfolioApp {
     const delta = this.clock.getDelta();
     const elapsedTime = this.clock.getElapsedTime();
 
-    // 1. Controls Update
     this.controls.update();
 
-    // 2. Auto Tour Mode (Slow cinematic orbit)
+    // 1. Auto Tour Mode
     if (this.isTourActive && !this.isTransitioning) {
-      const radius = 32;
-      const speed = 0.15;
+      const radius = 42;
+      const speed = 0.12;
       this.camera.position.x = Math.cos(elapsedTime * speed) * radius;
       this.camera.position.z = Math.sin(elapsedTime * speed) * radius;
       this.camera.lookAt(CONFIG.views.home.target);
     }
 
-    // 3. Rotating Windmill Blades
+    // 2. Astropulse SMM Automated Barrier Gate (Opens and Closes on loop!)
+    if (this.animatedObjects.smmGate) {
+      // 8 second cycle: 0-3s closed, 3-4s lifting, 4-6s open, 6-7s lowering
+      const gateCycle = (elapsedTime % 8);
+      let angle = 0;
+      if (gateCycle >= 3 && gateCycle < 4) {
+        // Lifting open
+        angle = (gateCycle - 3) * (Math.PI / 2.3);
+      } else if (gateCycle >= 4 && gateCycle < 6) {
+        // Held open
+        angle = Math.PI / 2.3;
+      } else if (gateCycle >= 6 && gateCycle < 7) {
+        // Lowering closed
+        angle = (1 - (gateCycle - 6)) * (Math.PI / 2.3);
+      } else {
+        angle = 0;
+      }
+      this.animatedObjects.smmGate.rotation.z = angle;
+    }
+
+    // 3. Astropulse SMM Employees Assigned Job Animations
+    this.animatedObjects.smmEmployees.forEach(emp => {
+      switch (emp.role) {
+        case 'guard':
+          // Salutes with right arm when gate is opening
+          emp.rArm.rotation.x = Math.sin(elapsedTime * 2) * 0.4 - 0.4;
+          emp.head.rotation.y = Math.sin(elapsedTime * 1.5) * 0.25;
+          break;
+        case 'server_engineer':
+          // Typing rapidly on keyboards
+          emp.lArm.rotation.x = -Math.PI / 3 + Math.sin(elapsedTime * 12) * 0.15;
+          emp.rArm.rotation.x = -Math.PI / 3 + Math.cos(elapsedTime * 12) * 0.15;
+          break;
+        case 'strategist':
+          // Gesturing at social analytics chart
+          emp.rArm.rotation.x = -Math.PI / 2.5 + Math.sin(elapsedTime * 2.5) * 0.3;
+          emp.lArm.rotation.z = Math.sin(elapsedTime * 2) * 0.2;
+          break;
+        case 'support':
+          // Nodding head and gentle gestures
+          emp.head.rotation.x = Math.sin(elapsedTime * 4) * 0.15;
+          emp.rArm.rotation.x = -Math.PI / 4 + Math.sin(elapsedTime * 3) * 0.2;
+          break;
+        case 'courier': {
+          // Walking back and forth between office and gate
+          const t = Math.sin(elapsedTime * 1.2);
+          emp.group.position.x = 7.0 + t * 2.5;
+          emp.group.rotation.y = t >= 0 ? 0 : Math.PI;
+          emp.lLeg.rotation.x = Math.sin(elapsedTime * 6) * 0.4;
+          emp.rLeg.rotation.x = -Math.sin(elapsedTime * 6) * 0.4;
+          break;
+        }
+        case 'coffee':
+          // Raising coffee mug to sip
+          emp.rArm.rotation.x = -Math.PI / 3 + Math.sin(elapsedTime * 1.5) * 0.35;
+          break;
+        case 'designer':
+          // Typing and inspecting dual monitors
+          emp.lArm.rotation.x = -Math.PI / 3.5 + Math.sin(elapsedTime * 8) * 0.1;
+          emp.rArm.rotation.x = -Math.PI / 3.5 + Math.cos(elapsedTime * 8) * 0.1;
+          break;
+        case 'api_eng':
+          // Tapping tablet
+          emp.lArm.rotation.x = -Math.PI / 3;
+          emp.rArm.rotation.x = -Math.PI / 3 + Math.sin(elapsedTime * 10) * 0.12;
+          break;
+      }
+    });
+
+    // 4. Commuter: Leaves House, Walks Down Sidewalk, & Returns Home
+    if (this.animatedObjects.commuter) {
+      const c = this.animatedObjects.commuter;
+      const walkTime = 16; // 16 second commute cycle
+      const phase = (elapsedTime % walkTime);
+
+      if (phase < 6) {
+        // Walking out from house (-12, 2.9, 3.4) toward city center (-2, 2.9, 3.4)
+        const progress = phase / 6;
+        c.group.position.x = -12 + progress * 10;
+        c.group.rotation.y = Math.PI / 2; // Facing city
+        c.lLeg.rotation.x = Math.sin(elapsedTime * 8) * 0.45;
+        c.rLeg.rotation.x = -Math.sin(elapsedTime * 8) * 0.45;
+        c.lArm.rotation.x = -Math.sin(elapsedTime * 8) * 0.4;
+        c.rArm.rotation.x = Math.sin(elapsedTime * 8) * 0.4;
+        c.group.visible = true;
+      } else if (phase < 8) {
+        // Paused at city destination greeting
+        c.lLeg.rotation.x = 0;
+        c.rLeg.rotation.x = 0;
+        c.lArm.rotation.x = 0;
+        c.rArm.rotation.x = 0;
+      } else if (phase < 14) {
+        // Walking back to house
+        const progress = (phase - 8) / 6;
+        c.group.position.x = -2 - progress * 10;
+        c.group.rotation.y = -Math.PI / 2; // Facing home
+        c.lLeg.rotation.x = Math.sin(elapsedTime * 8) * 0.45;
+        c.rLeg.rotation.x = -Math.sin(elapsedTime * 8) * 0.45;
+        c.lArm.rotation.x = -Math.sin(elapsedTime * 8) * 0.4;
+        c.rArm.rotation.x = Math.sin(elapsedTime * 8) * 0.4;
+        c.group.visible = true;
+      } else {
+        // Inside house relaxing!
+        c.group.visible = false;
+      }
+    }
+
+    // 5. The Falling Cyclist Event! (Cycles, wobbles, tumbles down, recovers!)
+    if (this.animatedObjects.cyclist) {
+      const cy = this.animatedObjects.cyclist;
+      const loopTime = 16; // 16-second dynamic cycle
+      const cycleTime = (elapsedTime % loopTime);
+
+      if (cycleTime < 6.5) {
+        // Normal pedaling along avenue
+        const speed = 2.4;
+        cy.group.position.x = -14 + (cycleTime * speed);
+        cy.group.position.y = 2.9;
+        cy.group.rotation.set(0, Math.PI / 2, 0); // Upright
+        cy.bike.rotation.z = 0;
+        cy.rider.rotation.z = -0.22;
+        cy.rider.position.set(0, 0, 0);
+      } else if (cycleTime < 7.8) {
+        // Wobble! Hits a road bump
+        const wobble = Math.sin(elapsedTime * 24) * 0.3;
+        cy.group.position.x = 1.6;
+        cy.bike.rotation.z = wobble;
+        cy.rider.rotation.z = -wobble;
+      } else if (cycleTime < 10.5) {
+        // Tumble / Fall Down on the road!
+        cy.bike.rotation.z = -Math.PI / 2.3; // Bike flat on side
+        cy.rider.position.set(0.6, -0.45, 0.4); // Rider on the ground
+        cy.rider.rotation.z = -Math.PI / 2.2;
+      } else if (cycleTime < 12.5) {
+        // Sits up and shakes off dust ("Ouch!")
+        cy.bike.rotation.z = -Math.PI / 2.3;
+        cy.rider.position.set(0.4, -0.15, 0.2);
+        cy.rider.rotation.z = -0.4; // Sitting up
+      } else if (cycleTime < 14.5) {
+        // Stands up & lifts bike upright
+        cy.bike.rotation.z = 0; // Bike lifted back up
+        cy.rider.position.set(0, 0, 0);
+        cy.rider.rotation.z = 0; // Standing beside bike
+      } else {
+        // Mounts back on bike and prepares to ride
+        cy.rider.rotation.z = -0.22;
+      }
+    }
+
+    // 6. Farmer Farming with Hoe at the Terraced Fields
+    if (this.animatedObjects.farmer) {
+      const f = this.animatedObjects.farmer;
+      // Rhythmic hoeing swing into soil
+      const farmCycle = (elapsedTime * 2.8) % (Math.PI * 2);
+      f.torso.rotation.x = Math.sin(farmCycle) * 0.35 + 0.15; // Bends forward
+      f.hoeArm.rotation.x = -Math.sin(farmCycle) * 0.65; // Swings hoe
+    }
+
+    // 7. Welcome Guide / Narrator Moving Both Hands
+    if (this.animatedObjects.guide) {
+      const g = this.animatedObjects.guide;
+      // Active presentation gestures with both arms
+      g.lArm.rotation.x = Math.sin(elapsedTime * 3) * 0.5 - 0.5;
+      g.lArm.rotation.z = Math.sin(elapsedTime * 2.5) * 0.4 - 0.4; // Arm spread wide
+      g.rArm.rotation.x = Math.cos(elapsedTime * 3) * 0.5 - 0.5;
+      g.rArm.rotation.z = -Math.cos(elapsedTime * 2.5) * 0.4 + 0.4; // Arm spread wide
+      g.head.rotation.y = Math.sin(elapsedTime * 2) * 0.25;
+    }
+
+    // 8. Rotating Windmill Blades
     if (this.animatedObjects.windmillBlades) {
       this.animatedObjects.windmillBlades.rotation.z -= delta * 1.8;
     }
 
-    // 4. Floating & Rotating AI Crystal
+    // 9. Floating & Rotating AI Crystal
     if (this.animatedObjects.aiCrystal) {
       this.animatedObjects.aiCrystal.rotation.y += delta * 1.2;
-      this.animatedObjects.aiCrystal.rotation.x = Math.sin(elapsedTime * 2) * 0.15;
-      this.animatedObjects.aiCrystal.position.y = 2.0 + Math.sin(elapsedTime * 2.5) * 0.18;
+      this.animatedObjects.aiCrystal.position.y = 2.2 + Math.sin(elapsedTime * 2.5) * 0.18;
     }
     if (this.animatedObjects.aiRing) {
       this.animatedObjects.aiRing.rotation.z += delta * 0.8;
     }
 
-    // 5. Camper Van Idle Vibration
+    // 10. Camper Van Idle Bounce
     if (this.animatedObjects.van) {
-      this.animatedObjects.van.position.y = 2.25 + Math.sin(elapsedTime * 4) * 0.015;
+      this.animatedObjects.van.position.y = 2.9 + Math.sin(elapsedTime * 4) * 0.015;
     }
 
-    // 6. Campfire Light Flicker
+    // 11. Campfire Light Flicker
     if (this.animatedObjects.campfireLight) {
       this.animatedObjects.campfireLight.intensity = 2.0 + Math.sin(elapsedTime * 12) * 0.4 + Math.cos(elapsedTime * 7) * 0.2;
     }
 
-    // 7. Drifting Clouds
+    // 12. Drifting Clouds
     this.animatedObjects.clouds.forEach(cloud => {
       cloud.angle += cloud.speed;
       cloud.mesh.position.x = Math.cos(cloud.angle) * cloud.radius;
@@ -1659,44 +2103,30 @@ class PortfolioApp {
       cloud.mesh.position.y = cloud.baseY + Math.sin(elapsedTime + cloud.angle) * 0.4;
     });
 
-    // 8. Rising Firefly Particles
+    // 13. Rising Particles
     if (this.animatedObjects.particles) {
       const pos = this.animatedObjects.particles.mesh.geometry.attributes.position;
       const speeds = this.animatedObjects.particles.speeds;
       for (let i = 0; i < this.animatedObjects.particles.count; i++) {
         let y = pos.getY(i) + speeds[i];
-        if (y > 16) y = 2.5; // loop back down
+        if (y > 20) y = 3;
         pos.setY(i, y);
       }
       pos.needsUpdate = true;
     }
 
-    // 9. Cyclist Movement Along Curve
-    if (this.animatedObjects.cyclist && this.roadCurve) {
-      const loopTime = 14; // seconds to traverse
-      const t = (elapsedTime % loopTime) / loopTime;
-      const pos = this.roadCurve.getPointAt(t);
-      const tangent = this.roadCurve.getTangentAt(t);
-
-      this.animatedObjects.cyclist.position.copy(pos);
-      this.animatedObjects.cyclist.position.y += 0.05;
-
-      const angle = Math.atan2(tangent.x, tangent.z);
-      this.animatedObjects.cyclist.rotation.y = angle;
-    }
-
-    // 10. Hotspots Beacons Animation
+    // 14. Hotspots Pulse & Gem Rotation
     this.animatedObjects.hotspotMeshes.forEach((spot, i) => {
       spot.gem.rotation.y += delta * 1.5;
-      spot.gem.position.y = 0.55 + Math.sin(elapsedTime * 3 + i) * 0.1;
+      spot.gem.position.y = 0.6 + Math.sin(elapsedTime * 3 + i) * 0.1;
       const scale = 1 + Math.sin(elapsedTime * 4 + i) * 0.15;
       spot.ring.scale.set(scale, scale, 1);
     });
 
-    // 11. Sync 2D HTML Hotspots Overlay
+    // 15. Project Hotspot DOM overlay
     this.updateHotspotsProjection();
 
-    // 12. Render Frame
+    // 16. Render Scene
     this.renderer.render(this.scene, this.camera);
   }
 }

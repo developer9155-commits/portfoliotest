@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Murari Kumar | 3D Developer Portfolio & AI Product Builder</title>
+  <meta name="description" content="Cinematic interactive 3D portfolio of Murari Kumar, Diploma CSE student, Web Developer, and AI Product Builder. Creator of Nexora AI and CropIndia AI.">
+  <meta name="author" content="Murari Kumar">
+
+  <!-- Favicon (SVG data URI for instant standalone display) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%236366f1'/><text x='50' y='65' font-size='48' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23ffffff'>MK</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- GSAP Animation Library from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Three.js Import Map for standard modern ES Modules -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- WebGL Canvas -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Fullscreen Loading Screen -->
+  <div id="loading-screen" class="loading-screen" role="dialog" aria-label="Loading 3D Portfolio">
+    <div class="loader-content">
+      <div class="loader-badge">
+        <span class="badge-ring"></span>
+        <span class="badge-text">MK</span>
+      </div>
+      <h1 class="loader-title">Murari Kumar</h1>
+      <p class="loader-subtitle">Diploma CSE Student &amp; AI Product Builder</p>
+      
+      <div class="progress-container">
+        <div class="progress-bar-bg">
+          <div id="progress-bar" class="progress-bar-fill"></div>
+        </div>
+        <div class="progress-meta">
+          <span id="loading-status">Constructing miniature 3D world...</span>
+          <span id="progress-percent">0%</span>
+        </div>
+      </div>
+
+      <button id="skip-load-btn" class="skip-btn" style="display: none;">
+        Enter World Now &rarr;
+      </button>
+
+      <div class="loader-tip">
+        <span>💡 Tip:</span> Drag with your mouse or finger to orbit around the miniature island.
+      </div>
+    </div>
+  </div>
+
+  <!-- WebGL Unsupported Fallback Notice -->
+  <div id="webgl-fallback" class="webgl-fallback" style="display: none;">
+    <div class="fallback-card">
+      <h2>3D Acceleration Not Detected</h2>
+      <p>Your browser or device does not have WebGL enabled. You can still explore Murari Kumar's portfolio in standard 2D view below.</p>
+      <button id="fallback-browse-btn" class="btn btn-primary">Open Portfolio Content</button>
+    </div>
+  </div>
+
+  <!-- Top Glassmorphism Navigation Bar -->
+  <header class="top-nav" role="banner">
+    <div class="nav-brand" id="brand-logo" title="Reset to World Overview">
+      <div class="brand-avatar">MK</div>
+      <div class="brand-info">
+        <span class="brand-name">Murari Kumar</span>
+        <span class="brand-status"><span class="status-dot"></span> Available for Projects</span>
+      </div>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="nav-links" aria-label="Main Navigation">
+      <button class="nav-link active" data-target="home">Overview</button>
+      <button class="nav-link" data-target="about">About</button>
+      <button class="nav-link" data-target="skills">Skills</button>
+      <button class="nav-link" data-target="nexora">Nexora AI</button>
+      <button class="nav-link" data-target="cropindia">CropIndia AI</button>
+      <button class="nav-link" data-target="education">Education</button>
+      <button class="nav-link" data-target="contact">Contact</button>
+    </nav>
+
+    <!-- Navigation Utility Controls -->
+    <div class="nav-controls">
+      <!-- Ambient Audio Toggle -->
+      <button id="audio-toggle-btn" class="control-btn" title="Toggle Chill Ambient Audio" aria-label="Toggle Sound">
+        <svg class="icon icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+        <svg class="icon icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span class="btn-label">Audio</span>
+      </button>
+
+      <!-- Auto Tour Mode Toggle -->
+      <button id="tour-toggle-btn" class="control-btn" title="Toggle Cinematic Auto-Tour Orbit" aria-label="Toggle Auto Tour">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="10 8 16 12 10 16 10 8"></polygon>
+        </svg>
+        <span class="btn-label">Tour</span>
+      </button>
+
+      <!-- Reset Camera Button -->
+      <button id="reset-cam-btn" class="control-btn" title="Reset Camera to Home Overview" aria-label="Reset Camera">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+          <path d="M3 3v5h5"></path>
+        </svg>
+        <span class="btn-label">Reset</span>
+      </button>
+
+      <!-- Mobile Hamburger Button -->
+      <button id="menu-toggle-btn" class="control-btn menu-btn" aria-label="Open Navigation Menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div id="mobile-menu" class="mobile-menu" role="dialog" aria-label="Mobile Navigation">
+    <div class="mobile-menu-header">
+      <div class="brand-avatar">MK</div>
+      <span class="brand-name">Murari Kumar</span>
+      <button id="mobile-menu-close" class="close-icon-btn" aria-label="Close menu">&times;</button>
+    </div>
+    <div class="mobile-menu-links">
+      <button class="mobile-nav-link" data-target="home">🌐 World Overview</button>
+      <button class="mobile-nav-link" data-target="about">👤 About Me</button>
+      <button class="mobile-nav-link" data-target="skills">⚡ Skills &amp; Stack</button>
+      <button class="mobile-nav-link" data-target="nexora">🚀 Nexora AI (Featured)</button>
+      <button class="mobile-nav-link" data-target="cropindia">🌾 CropIndia AI</button>
+      <button class="mobile-nav-link" data-target="education">🎓 Education</button>
+      <button class="mobile-nav-link" data-target="contact">📬 Get in Touch</button>
+    </div>
+    <div class="mobile-menu-footer">
+      <p>Diploma CSE • Web &amp; AI Builder</p>
+    </div>
+  </div>
+
+  <!-- Floating 3D Hotspot Screen Overlay Labels -->
+  <div id="hotspots-overlay" class="hotspots-overlay" aria-hidden="true">
+    <!-- Populated dynamically and synced to 3D world coordinates -->
+  </div>
+
+  <!-- Hero Glass Card (Displays on Home / Overview View) -->
+  <section id="hero-card" class="hero-card" aria-label="Introduction">
+    <div class="hero-tag">
+      <span class="tag-sparkle">✦</span> Interactive 3D Portfolio
+    </div>
+    <h2 class="hero-title">Hi, I'm <span class="highlight-text">Murari Kumar</span></h2>
+    <p class="hero-role">Diploma CSE Student &amp; Developer</p>
+    <p class="hero-desc">
+      I build digital experiences and AI-powered products. Drag to explore my miniature low-poly world or click any glowing beacon.
+    </p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" data-action="explore">
+        <span>Explore World</span> &darr;
+      </button>
+      <button class="btn btn-secondary" data-action="open-project" data-target="nexora">
+        <span>Nexora AI</span> &rarr;
+      </button>
+      <button class="btn btn-ghost" data-action="open-section" data-target="contact">
+        <span>Contact</span>
+      </button>
+    </div>
+    <div class="hero-hints">
+      <span class="hint-item"><kbd>Left Click + Drag</kbd> Orbit</span>
+      <span class="hint-item"><kbd>Scroll</kbd> Zoom</span>
+      <span class="hint-item"><kbd>Click Hotspots</kbd> Inspect</span>
+    </div>
+  </section>
+
+  <!-- Interactive Content Slide-Out Drawer / Modal System -->
+  <div id="content-modal-backdrop" class="modal-backdrop">
+    <aside id="content-modal" class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span id="modal-category" class="modal-category">CATEGORY</span>
+          <h2 id="modal-heading" class="modal-heading">Section Title</h2>
+        </div>
+        <button id="modal-close-btn" class="modal-close-btn" aria-label="Close dialog" title="Close (&Esc;)">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div id="modal-body" class="modal-body">
+        <!-- Dynamic content injected here from sections below -->
+      </div>
+
+      <div class="modal-footer">
+        <button id="modal-back-btn" class="btn btn-secondary">
+          &larr; Return to 3D World
+        </button>
+        <span class="keyboard-tip"><kbd>ESC</kbd> to return</span>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Template Content Cache (Semantic HTML kept accessible) -->
+  <div id="sections-content-store" style="display: none;" aria-hidden="true">
+
+    <!-- SECTION: ABOUT ME -->
+    <div id="template-about">
+      <div class="about-hero">
+        <div class="about-badge-row">
+          <span class="badge badge-purple">CSE Diploma Student</span>
+          <span class="badge badge-teal">Web &amp; AI Builder</span>
+          <span class="badge badge-amber">Tech Explorer</span>
+        </div>
+        <p class="lead-text">
+          Hello! I am <strong>Murari Kumar</strong>, a Computer Science and Engineering diploma student driven by curiosity and a deep passion for building practical, impactful software.
+        </p>
+      </div>
+
+      <div class="content-block">
+        <h3>My Journey &amp; Focus</h3>
+        <p>
+          I focus on turning software ideas into real, functional experiences. From developing modern web applications with responsive user interfaces to engineering Android applications and integrating cutting-edge Artificial Intelligence capabilities, I enjoy every phase of product development.
+        </p>
+        <p>
+          As a CSE diploma student, I have built strong fundamentals in Data Structures, Database Management Systems (DBMS), Object-Oriented Programming (Java &amp; C++), and modern web stacks (JavaScript, React, Firebase, and REST APIs).
+        </p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">💻</div>
+          <h4>Full-Stack &amp; Web</h4>
+          <p>Building clean, responsive, and performance-tuned web interfaces with HTML, CSS, JavaScript, and React.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h4>AI Integration</h4>
+          <p>Connecting modern Large Language Models and AI APIs into productive workflows (e.g., automated website builders).</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h4>Android &amp; Systems</h4>
+          <p>Writing clean Java and C++ code with solid object-oriented architecture and database connectivity.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h4>Continuous Learning</h4>
+          <p>Actively experimenting with new tools, 3D WebGL graphics, APIs, and modern cloud deployment pipelines.</p>
+        </div>
+      </div>
+
+      <div class="quote-box">
+        <p><em>"I believe the best way to master technology is to build real, usable products that solve actual problems."</em></p>
+      </div>
+    </div>
+
+    <!-- SECTION: SKILLS -->
+    <div id="template-skills">
+      <p class="lead-text">
+        Here is a breakdown of the core technologies, programming languages, and engineering tools I actively work with:
+      </p>
+
+      <div class="skills-category">
+        <div class="category-header">
+          <span class="category-icon">⚙️</span>
+          <h4>Programming Languages</h4>
+        </div>
+        <div class="skills-badges">
+          <span class="skill-pill"><strong>C++</strong><span>Systems &amp; DSA</span></span>
+          <span class="skill-pill"><strong>Java</strong><span>OOP &amp; Core</span></span>
+          <span class="skill-pill"><strong>Python</strong><span>Scripting &amp; AI</span></span>
+          <span class="skill-pill"><strong>JavaScript (ES6+)</strong><span>Modern Web</span></span>
+        </div>
+      </div>
+
+      <div class="skills-category">
+        <div class="category-header">
+          <span class="category-icon">🎨</span>
+          <h4>Frontend &amp; Mobile Development</h4>
+        </div>
+        <div class="skills-badges">
+          <span class="skill-pill"><strong>HTML5 &amp; CSS3</strong><span>Semantic &amp; Responsive</span></span>
+          <span class="skill-pill"><strong>React</strong><span>Components &amp; State</span></span>
+          <span class="skill-pill"><strong>Android Development</strong><span>Mobile Apps</span></span>
+          <span class="skill-pill"><strong>Three.js</strong><span>3D Web &amp; Shaders</span></span>
+        </div>
+      </div>
+
+      <div class="skills-category">
+        <div class="category-header">
+          <span class="category-icon">🗄️</span>
+          <h4>Backend &amp; Databases</h4>
+        </div>
+        <div class="skills-badges">
+          <span class="skill-pill"><strong>DBMS &amp; SQL</strong><span>Database Architecture</span></span>
+          <span class="skill-pill"><strong>REST APIs</strong><span>Client-Server Integration</span></span>
+          <span class="skill-pill"><strong>Firebase</strong><span>Auth &amp; Firestore</span></span>
+        </div>
+      </div>
+
+      <div class="skills-category">
+        <div class="category-header">
+          <span class="category-icon">🛠️</span>
+          <h4>Tools, Workflow &amp; AI</h4>
+        </div>
+        <div class="skills-badges">
+          <span class="skill-pill"><strong>AI Integration</strong><span>LLM &amp; Prompt Engineering</span></span>
+          <span class="skill-pill"><strong>Git &amp; GitHub</strong><span>Version Control</span></span>
+          <span class="skill-pill"><strong>Vercel &amp; Hosting</strong><span>Static &amp; Cloud Deployment</span></span>
+          <span class="skill-pill"><strong>GSAP</strong><span>Web Animations</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: NEXORA AI (FEATURED PROJECT) -->
+    <div id="template-nexora">
+      <div class="project-hero-badge">
+        <span class="pulse-indicator"></span> Featured AI Product
+      </div>
+      
+      <h3 class="project-name">Nexora AI &mdash; AI-Powered Website Builder</h3>
+      <p class="lead-text">
+        Nexora AI is an intelligent platform designed to bridge the gap between creative imagination and production-ready web presence. It enables users to describe what they want in natural language and generates fully structured websites ready to publish online.
+      </p>
+
+      <div class="project-links-row">
+        <a href="https://nexora-ai-webbuilder.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          Visit Live Demo (Vercel)
+        </a>
+        <a href="https://github.com/YOUR_GITHUB_USERNAME/nexora-ai" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" title="Replace with your GitHub repository link">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          Source Code (Configurable)
+        </a>
+      </div>
+
+      <div class="content-block">
+        <h4>Key Capabilities</h4>
+        <ul class="feature-bullets">
+          <li><strong>Prompt-to-Website Synthesis:</strong> Users provide design ideas, business details, or color themes, and the AI generates complete semantic layouts.</li>
+          <li><strong>Interactive Real-Time Preview:</strong> Instant live preview so users can view changes on both desktop and mobile layouts in real time.</li>
+          <li><strong>Publishing &amp; Hosting Workflow:</strong> Streamlined mechanisms to help users deploy their websites online without manual server setup.</li>
+          <li><strong>Responsive &amp; Modern Components:</strong> Generated sites feature modern typography, hero sections, feature grids, and contact hooks.</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h4>Confirmed Technology Stack</h4>
+        <div class="tech-tags-list">
+          <span class="tech-tag">React</span>
+          <span class="tech-tag">Vite</span>
+          <span class="tech-tag">JavaScript / TypeScript</span>
+          <span class="tech-tag">Firebase Backend</span>
+          <span class="tech-tag">AI API Integration</span>
+          <span class="tech-tag">Vercel Deployment</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: CROPINDIA AI -->
+    <div id="template-cropindia">
+      <div class="project-hero-badge badge-green">
+        <span class="pulse-indicator pulse-green"></span> Agricultural Intelligence Concept
+      </div>
+
+      <h3 class="project-name">CropIndia AI &mdash; Agricultural Intelligence &amp; Visualization</h3>
+      <p class="lead-text">
+        CropIndia AI is an active product concept and research project aimed at supporting Indian agriculture with data-driven decision making, crop production information, and visual analytics.
+      </p>
+
+      <div class="content-block">
+        <h4>Project Vision &amp; Planned Features</h4>
+        <p>
+          <em>Note: This project is currently in the architectural concept and prototype phase. Features below represent the planned capabilities being developed:</em>
+        </p>
+        <ul class="feature-bullets">
+          <li><strong>Crop Production Analytics:</strong> Visual representations of regional crop yield trends, soil health metrics, and seasonal production patterns.</li>
+          <li><strong>Intelligent Crop Advisory:</strong> Suggesting suitable crops based on weather patterns, soil type, and regional climate conditions.</li>
+          <li><strong>Accessible Multilingual Visualization:</strong> Presenting complex agricultural information through intuitive charts and visual infographics suitable for farmers and regional advisors.</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h4>Intended Technology Stack (Under Development)</h4>
+        <div class="tech-tags-list">
+          <span class="tech-tag">Python (Data Analytics)</span>
+          <span class="tech-tag">AI / Machine Learning Concept</span>
+          <span class="tech-tag">Interactive Web Dashboard</span>
+          <span class="tech-tag">RESTful APIs</span>
+        </div>
+      </div>
+
+      <div class="project-links-row">
+        <a href="https://github.com/YOUR_GITHUB_USERNAME/cropindia-ai" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          Repository (Configurable Placeholder)
+        </a>
+      </div>
+    </div>
+
+    <!-- SECTION: EDUCATION -->
+    <div id="template-education">
+      <div class="education-card">
+        <div class="edu-badge">Diploma</div>
+        <div class="edu-info">
+          <h3>Diploma in Computer Science &amp; Engineering (CSE)</h3>
+          <p class="edu-institution"><em>[Your Polytechnic / College Name Here]</em></p>
+          <p class="edu-meta">
+            <span>📅 Duration: [e.g., 2023 &ndash; Present]</span> &bull; 
+            <span>📍 Location: [Your City / State, India]</span>
+          </p>
+          <div class="edu-desc">
+            <p>Comprehensive engineering diploma curriculum covering core computing fundamentals:</p>
+            <ul class="feature-bullets">
+              <li><strong>Core Programming:</strong> C++, Java, Python, and Object-Oriented System Design.</li>
+              <li><strong>Systems &amp; Data:</strong> Data Structures &amp; Algorithms, Database Management Systems (DBMS), and Computer Networks.</li>
+              <li><strong>Applied Engineering:</strong> Web Development, Software Engineering practices, Operating Systems, and Project Development.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: CONTACT -->
+    <div id="template-contact">
+      <p class="lead-text">
+        I am always interested in discussing new development projects, internship opportunities, and innovative AI ideas. Feel free to connect!
+      </p>
+
+      <div class="contact-cards-grid">
+        <div class="contact-card">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-detail">
+            <h4>Email</h4>
+            <p id="email-address-text">[your.email@example.com]</p>
+            <button id="copy-email-btn" class="btn btn-sm btn-secondary">
+              Copy Email Address
+            </button>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">🐙</div>
+          <div class="contact-detail">
+            <h4>GitHub Profile</h4>
+            <p>Explore my code repositories &amp; open source projects</p>
+            <a href="https://github.com/YOUR_GITHUB_USERNAME" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+              github.com/YOUR_GITHUB_USERNAME &rarr;
+            </a>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">💼</div>
+          <div class="contact-detail">
+            <h4>LinkedIn</h4>
+            <p>Connect with me professionally</p>
+            <a href="https://linkedin.com/in/YOUR_LINKEDIN_PROFILE" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+              linkedin.com/in/YOUR_LINKEDIN_PROFILE &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <p class="note-box">
+          <em>💡 Note for Murari: Replace the placeholder email, GitHub, and LinkedIn links in <code>index.html</code> with your real profiles whenever you are ready!</em>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom HUD Status Bar -->
+  <footer class="bottom-hud">
+    <div class="hud-left">
+      <span class="hud-item"><span class="badge-dot"></span> 3D Low-Poly Miniature World</span>
+      <span class="hud-item keyboard-hint-desktop">Press <kbd>Space</kbd> for Auto-Tour</span>
+    </div>
+    <div class="hud-right">
+      <span>Built with Three.js &amp; GSAP &bull; Murari Kumar &copy; 2026</span>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript Application Module -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
